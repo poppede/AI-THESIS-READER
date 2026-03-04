@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thesis Topic Agent Pipeline</title>
+<style>
+:root{--bg:#f4f1ea;--panel:#fffdf8;--ink:#1f2a35;--muted:#5f6a75;--accent:#0c6e5d;--accent2:#f4a261;--line:#d9d2c3;--radius:14px;--shadow:0 10px 22px rgba(34,45,57,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:"Trebuchet MS","Segoe UI",sans-serif;background:radial-gradient(circle at 10% 10%,rgba(244,162,97,.15),transparent 35%),radial-gradient(circle at 90% 20%,rgba(12,110,93,.16),transparent 32%),var(--bg);color:var(--ink)}
+.container{width:min(1100px,94vw);margin:24px auto 36px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(1.4rem,2.4vw,2rem)}.sub{margin:.35rem 0 0;color:var(--muted)}
+.lang{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+.lang button{border:0;background:transparent;padding:7px 13px;border-radius:999px;cursor:pointer}.lang .active{background:var(--accent);color:#fff}
+.drop{margin:16px 0;border:2px dashed var(--line);background:var(--panel);border-radius:var(--radius);padding:22px;text-align:center;box-shadow:var(--shadow)}
+.drop.drag{border-color:var(--accent)}#fileInput{display:none}.pick,.btn{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+.pick{background:var(--accent2);margin-top:10px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{background:var(--accent);color:#fff}.btn.secondary{background:#33444f}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow)}
+.card h3{margin:.1rem 0 .65rem;font-size:1rem}ul{margin:.2rem 0;padding-left:18px}li{margin-bottom:6px;font-size:.93rem}.status{color:var(--muted);min-height:20px}
+pre{margin-top:8px;background:#f8f5ef;border:1px solid #e7dfd0;border-radius:10px;padding:10px;max-height:220px;overflow:auto;font-size:.8rem}
+.topic{border:1px solid #e2dbc9;border-radius:11px;padding:8px;margin-bottom:8px;background:#fff}.badge{background:#e6f5ef;color:#145c4d;border-radius:999px;padding:2px 8px;font-size:.78rem;font-weight:700;margin-left:6px}
+.note{font-size:.84rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top">
+    <div>
+      <h1 id="title">5-Agent Thesis Topic Pipeline</h1>
+      <p class="sub" id="subtitle">Upload PDF papers and generate ranked thesis topics.</p>
+    </div>
+    <div class="lang">
+      <button id="en" class="active">EN</button><button id="es">ES</button>
+    </div>
+  </div>
+
+  <section class="drop" id="dropzone">
+    <p><strong id="dropTitle">Drag and drop PDFs here</strong></p>
+    <p id="dropHint">or click to select one or more files</p>
+    <button class="pick" id="pickBtn">Choose PDF files</button>
+    <input id="fileInput" type="file" accept="application/pdf" multiple />
+  </section>
+
+  <div class="actions">
+    <button class="btn" id="runBtn" disabled>Run Agent Pipeline</button>
+    <button class="btn secondary" id="clearBtn">Clear</button>
+  </div>
+  <p class="status" id="status"></p>
+
+  <section class="grid">
+    <article class="card"><h3 id="a1t">Agent 1: Academic Landscape Scout</h3><div id="a1"></div></article>
+    <article class="card"><h3 id="a2t">Agent 2: Dataset Intelligence Officer</h3><div id="a2"></div></article>
+    <article class="card"><h3 id="a3t">Agent 3: Industry Relevance Strategist</h3><div id="a3"></div></article>
+    <article class="card"><h3 id="a4t">Agent 4: Methodology Architect</h3><div id="a4"></div></article>
+    <article class="card"><h3 id="a5t">Agent 5: Topic Synthesis Agent</h3><div id="a5"></div></article>
+    <article class="card"><h3 id="chartTitle">Agent Scores</h3><canvas id="chart" height="220"></canvas></article>
+  </section>
+
+  <p class="note" id="note">Note: OpenAlex calls are mocked for frontend-only simulation.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script type="module">
+import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.5.136/build/pdf.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.5.136/build/pdf.worker.min.mjs";
+const I={en:{title:"5-Agent Thesis Topic Pipeline",subtitle:"Upload PDF papers and generate ranked thesis topics.",dropTitle:"Drag and drop PDFs here",dropHint:"or click to select one or more files",pickBtn:"Choose PDF files",runBtn:"Run Agent Pipeline",clearBtn:"Clear",note:"Note: OpenAlex calls are mocked for frontend-only simulation.",a1t:"Agent 1: Academic Landscape Scout",a2t:"Agent 2: Dataset Intelligence Officer",a3t:"Agent 3: Industry Relevance Strategist",a4t:"Agent 4: Methodology Architect",a5t:"Agent 5: Topic Synthesis Agent",chartTitle:"Agent Scores",ready:"Ready to run analysis.",files:n=>`${n} PDF file(s) selected.`,extract:"Extracting text from PDFs...",agents:"Running agent simulation...",done:"Pipeline completed.",cleared:"Cleared.",none:"No result yet.",topics:"Ranked thesis topics",feedback:"Improvement feedback"},es:{title:"Pipeline de 5 Agentes para Temas de Tesis",subtitle:"Sube papers en PDF y genera temas de tesis rankeados.",dropTitle:"Arrastra y suelta PDFs aquí",dropHint:"o haz clic para seleccionar uno o varios archivos",pickBtn:"Elegir archivos PDF",runBtn:"Ejecutar Pipeline",clearBtn:"Limpiar",note:"Nota: Las llamadas a OpenAlex están simuladas en frontend.",a1t:"Agente 1: Explorador del Panorama Académico",a2t:"Agente 2: Oficial de Inteligencia de Datos",a3t:"Agente 3: Estratega de Relevancia Industrial",a4t:"Agente 4: Arquitecto Metodológico",a5t:"Agente 5: Agente de Síntesis de Temas",chartTitle:"Puntajes de Agentes",ready:"Listo para ejecutar el análisis.",files:n=>`${n} archivo(s) PDF seleccionado(s).`,extract:"Extrayendo texto de los PDFs...",agents:"Ejecutando simulación de agentes...",done:"Pipeline completado.",cleared:"Limpio.",none:"Sin resultados todavía.",topics:"Temas de tesis rankeados",feedback:"Feedback de mejora"}};
+let S={lang:"en",files:[],outputs:null},chart;
+const $=id=>document.getElementById(id);
+const E={title:$("title"),subtitle:$("subtitle"),dropTitle:$("dropTitle"),dropHint:$("dropHint"),pickBtn:$("pickBtn"),runBtn:$("runBtn"),clearBtn:$("clearBtn"),note:$("note"),status:$("status"),en:$("en"),es:$("es"),a1t:$("a1t"),a2t:$("a2t"),a3t:$("a3t"),a4t:$("a4t"),a5t:$("a5t"),chartTitle:$("chartTitle"),dropzone:$("dropzone"),fileInput:$("fileInput"),a1:$("a1"),a2:$("a2"),a3:$("a3"),a4:$("a4"),a5:$("a5"),canvas:$("chart")};
+const t=(k,...a)=>{const v=I[S.lang][k];return typeof v==="function"?v(...a):v};
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const list=a=>`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+const norm=s=>s.toLowerCase().replace(/\s+/g," ");
+function applyLang(){["title","subtitle","dropTitle","dropHint","pickBtn","runBtn","clearBtn","note","a1t","a2t","a3t","a4t","a5t","chartTitle"].forEach(k=>E[k].textContent=t(k));E.en.classList.toggle("active",S.lang==="en");E.es.classList.toggle("active",S.lang==="es");if(!S.outputs)E.status.textContent=S.files.length?t("files",S.files.length):t("ready");else render();}
+function domain(text){const n=norm(text),m=[['healthcare',["health","patient","clinical","hospital"]],['finance',["credit","bank","loan","fraud"]],['education',["student","learning","education","school"]],['supply_chain',["logistics","inventory","warehouse","supply chain"]],['sustainability',["climate","energy","carbon","emission"]]];let b=["general",0];for(const [k,words] of m){let s=0;for(const w of words)if(n.includes(w))s++;if(s>b[1])b=[k,s]}return b[0]}
+function kw(text,n=8){const stop=new Set(["the","and","for","with","from","that","this","using","data","model","analysis","study","research","para","con","que","los","las"]),c={};for(const w of (norm(text).match(/[a-zA-Záéíóúñ]{4,}/g)||[])){if(!stop.has(w))c[w]=(c[w]||0)+1}return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0])}
+function refs(d){const r={healthcare:["Wang, H. et al. (2024) 'Clinical risk prediction with foundation models', Journal of Biomedical Informatics, 156, 104589.","Gomez, A. and Patel, R. (2023) 'Federated learning for readmission forecasting', Artificial Intelligence in Medicine, 140, 102487.","Morris, J. and Allen, E. (2020) 'Bias auditing in predictive health analytics', Health Informatics Journal, 26(4), pp. 2985-3001.","Chen, L. et al. (2021) 'Transfer learning for diagnostic imaging', Computers in Biology and Medicine, 134, 104493.","Ibrahim, S. et al. (2022) 'Explainable ICU deterioration models', IEEE Access, 10, pp. 99210-99224."],finance:["Rahman, F. and Cooper, D. (2024) 'Graph neural fraud detection', Expert Systems with Applications, 245, 123412.","Li, Y. et al. (2023) 'Credit scoring under economic shift', Decision Support Systems, 170, 113934.","Nolan, P. and Singh, A. (2022) 'Interpretable AML alert prioritization', Knowledge-Based Systems, 243, 108470.","Marquez, J. et al. (2021) 'Forecasting SME default risk', European Journal of Operational Research, 295(1), pp. 213-229.","Evans, C. and Berg, T. (2020) 'ML fairness in consumer finance', Journal of Financial Data Science, 2(3), pp. 40-58."]};return r[d]||["Park, J. and Silva, R. (2024) 'Carbon-aware forecasting for smart grids', Applied Energy, 363, 122966.","Mendez, L. et al. (2023) 'Deep learning for building energy optimization', Energy and Buildings, 290, 113048.","Quinn, T. and Abbas, S. (2022) 'Climate risk scoring with geospatial signals', Environmental Modelling and Software, 156, 105477.","Nguyen, P. and Hart, A. (2021) 'Predictive maintenance for wind turbines', Renewable Energy, 176, pp. 654-668.","Carter, B. (2020) 'Data-driven emissions baselines', Sustainable Cities and Society, 61, 102342."]}
+function a1(text){const d=domain(text),k=kw(text);return{paper_highlights:[`Tokens extracted: ${text.split(/\s+/).length}.`,`Detected domain: ${d.replace("_"," ")}.`,`Frequent concepts: ${k.slice(0,6).join(", ")}.`],related_papers:refs(d),research_gaps:["Limited deployment and monitoring evidence.","Weak coverage of fairness and responsible AI.","Few longitudinal or cross-context evaluations."]}}
+function a2(text){const d=domain(text),m={healthcare:["MIMIC-IV + eICU", "PhysioNet", ["age","vitals trend","lab trajectory","comorbidity","medication class"],["Temporal windows","Missingness flags","Rolling deltas","Concept embeddings"]],finance:["Home Credit + IEEE-CIS Fraud", "Kaggle", ["amount","merchant class","credit length","device signature","income ratio"],["RFM aggregates","Time since last event","Entity graph features","WOE bins"]],education:["OULAD", "UCI / Open University", ["clickstream","assessment score","module engagement","submission lag","forum activity"],["Weekly deltas","Sequence embeddings","Outlier flags","Interaction terms"]],supply_chain:["Brazilian E-Commerce + NYC TLC", "Kaggle + NYC Open Data", ["lead time","distance band","seller rating","delivery status","weather proxy"],["Geo clusters","Congestion indicators","Seasonality decomposition","SLA deviation"]],sustainability:["UK Smart Meter + OPSD", "UK Data Service + OPSD", ["hourly load","temperature","tariff","building profile","renewable share"],["Lag features","Fourier terms","Peak/off-peak encoding","Carbon intensity join"]],general:["ACS + NYC Open Data", "data.gov + NYC Open Data", ["demographics","income band","service usage","location","time trend"],["Per-capita normalization","Segment buckets","Drift flags","Cross features"]]},x=m[d]||m.general;return{dataset_name:`${x[0]} (>20,000 rows expected)`,dataset_source:x[1],suggested_features:x[2],feature_engineering:x[3]}}
+function a3(text,a2o){const d=domain(text),u={healthcare:["Hospital triage prioritization","Readmission risk monitoring","Clinical operations optimization"],finance:["Fraud detection pipelines","Credit underwriting support","AML alert prioritization"],education:["Student dropout prevention","Adaptive learning pathways","Institutional planning dashboards"],supply_chain:["Demand forecasting","Last-mile route optimization","Inventory risk control"],sustainability:["Energy demand forecasting","Carbon reporting automation","Smart-grid optimization"],general:["BI automation","Predictive planning","Operational risk analytics"]};const base={healthcare:91,finance:94,education:84,supply_chain:89,sustainability:87,general:80}[d]||80;return{industry_use_cases:[...(u[d]||u.general),`Dataset fit: ${a2o.dataset_name}.`],demand_score:Math.min(100,base+2)}}
+function a4(text){const d=domain(text),m={healthcare:["Temporal Gradient Boosting + SHAP","★★★☆☆","Models clinical time patterns and explains patient-level risk drivers."],finance:["Graph Neural Network + XGBoost","★★★★☆","Combines relationship signals with tabular behavior for risk detection."],education:["Sequence Models (LSTM/Transformer-lite)","★★★☆☆","Learns student behavior sequences to predict outcomes."],supply_chain:["Probabilistic Forecasting + Optimization","★★★★☆","Forecasts demand uncertainty and optimizes logistics decisions."],sustainability:["Hybrid Time-Series (XGBoost + SARIMAX)","★★★☆☆","Captures seasonality and external drivers for energy/emission forecasting."],general:["Explainable Gradient Boosting","★★☆☆☆","Strong tabular baseline with interpretable outputs."]},x=m[d]||m.general;return{technique:x[0],difficulty:x[1],explanation:x[2]}}
+function a5(a1o,a2o,a3o,a4o){const b=a3o.demand_score,topics=[{title:`Explainable ${a4o.technique} for ${a3o.industry_use_cases[0].toLowerCase()}`,score:Math.min(100,b+2),rationale:"High demand + feasible data path."},{title:`Benchmark on ${a2o.dataset_name.split(" ")[0]} with fairness and drift checks`,score:b-3,rationale:"Directly addresses identified research gaps."},{title:`Operational decision support using ${a4o.technique}`,score:b-7,rationale:"Strong implementation and evaluation potential."},{title:"Human-in-the-loop analytics for robust deployment",score:b-11,rationale:"Bridges model quality and adoption barriers."}].sort((x,y)=>y.score-x.score);return{ranked_topics:topics,agent_scores:{agent_1:84,agent_2:88,agent_3:b,agent_4:83,agent_5:Math.round((b+87)/2)},improvement_feedback:{agent_1:"Map contradictions across papers.",agent_2:"Add data quality and leakage controls.",agent_3:"Segment demand by role and geography.",agent_4:"Define baselines and ablation plan."}}}
+async function extract(file){const b=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:b}).promise;let txt="";for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i),c=await p.getTextContent();txt+=" "+c.items.map(it=>it.str).join(" ")}return txt.trim()}
+async function run(){if(!S.files.length)return;E.status.textContent=t("extract");let text="";for(const f of S.files)text+=" "+await extract(f);E.status.textContent=t("agents");const o1=a1(text),o2=a2(text),o3=a3(text,o2),o4=a4(text),o5=a5(o1,o2,o3,o4);S.outputs={o1,o2,o3,o4,o5};render();E.status.textContent=t("done")}
+function render(){if(!S.outputs){[E.a1,E.a2,E.a3,E.a4,E.a5].forEach(x=>x.textContent=t("none"));if(chart){chart.destroy();chart=null}return}
+const {o1,o2,o3,o4,o5}=S.outputs;
+E.a1.innerHTML=`${list(o1.paper_highlights)}${list(o1.related_papers)}${list(o1.research_gaps)}<pre>${esc(JSON.stringify(o1,null,2))}</pre>`;
+E.a2.innerHTML=`<p><strong>${esc(o2.dataset_name)}</strong><br>${esc(o2.dataset_source)}</p>${list(o2.suggested_features)}${list(o2.feature_engineering)}<pre>${esc(JSON.stringify(o2,null,2))}</pre>`;
+E.a3.innerHTML=`${list(o3.industry_use_cases)}<p><strong>Demand:</strong> ${o3.demand_score}</p><pre>${esc(JSON.stringify(o3,null,2))}</pre>`;
+E.a4.innerHTML=`<p><strong>${esc(o4.technique)}</strong></p><p>${esc(o4.difficulty)}</p><p>${esc(o4.explanation)}</p><pre>${esc(JSON.stringify(o4,null,2))}</pre>`;
+E.a5.innerHTML=`<strong>${t("topics")}</strong>${o5.ranked_topics.map((x,i)=>`<div class="topic"><strong>#${i+1} ${esc(x.title)}</strong><span class="badge">${x.score}/100</span><div>${esc(x.rationale)}</div></div>`).join("")}<strong>${t("feedback")}</strong>${list(Object.entries(o5.improvement_feedback).map(([k,v])=>`${k}: ${v}`))}<pre>${esc(JSON.stringify({ranked_topics:o5.ranked_topics,agent_scores:o5.agent_scores},null,2))}</pre>`;
+if(chart)chart.destroy();chart=new Chart(E.canvas,{type:"bar",data:{labels:Object.keys(o5.agent_scores),datasets:[{data:Object.values(o5.agent_scores),backgroundColor:["#0c6e5d","#f4a261","#2a9d8f","#33444f","#e76f51"]}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}})}
+function setFiles(f){S.files=f.filter(x=>x.type==="application/pdf"||x.name.toLowerCase().endsWith(".pdf"));S.outputs=null;E.runBtn.disabled=!S.files.length;E.status.textContent=S.files.length?t("files",S.files.length):t("ready");render()}
+E.pickBtn.onclick=()=>E.fileInput.click();E.fileInput.onchange=e=>setFiles(Array.from(e.target.files||[]));
+E.dropzone.ondragover=e=>{e.preventDefault();E.dropzone.classList.add("drag")};E.dropzone.ondragleave=()=>E.dropzone.classList.remove("drag");E.dropzone.ondrop=e=>{e.preventDefault();E.dropzone.classList.remove("drag");setFiles(Array.from(e.dataTransfer.files||[]))};
+E.runBtn.onclick=run;E.clearBtn.onclick=()=>{S.files=[];S.outputs=null;E.fileInput.value="";E.runBtn.disabled=true;render();E.status.textContent=t("cleared")};
+E.en.onclick=()=>{S.lang="en";applyLang()};E.es.onclick=()=>{S.lang="es";applyLang()};
+render();applyLang();
+</script>
+</body>
+</html>
