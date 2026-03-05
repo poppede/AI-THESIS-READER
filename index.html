@@ -327,18 +327,20 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 function domain(text) {
   const n = norm(text);
   const domains = [
-    ['healthcare', ["health","patient","clinical","hospital","medical","diagnosis","treatment","disease","ehr","mortality","readmission","icu"]],
-    ['finance', ["credit","bank","loan","fraud","financial","investment","stock","portfolio","risk","default","payment","transaction"]],
-    ['education', ["student","learning","education","school","university","dropout","academic","course","assessment","engagement","literacy"]],
-    ['supply_chain', ["logistics","inventory","warehouse","supply chain","demand","delivery","shipping","supplier","procurement","lead time"]],
-    ['sustainability', ["climate","energy","carbon","emission","renewable","environment","sustainability","green","solar","wind","consumption"]],
-    ['nlp', ["language","text","nlp","sentiment","classification","transformer","bert","gpt","corpus","token","embedding","summarization"]],
-    ['computer_vision', ["image","vision","detection","segmentation","cnn","convolutional","object","recognition","pixel","visual","camera"]],
+    ['finance',              ["credit","bank","loan","fraud","financial","investment","stock","portfolio","risk","default","payment","transaction","fintech","trading","asset","valuation","Basel","AML"]],
+    ['customer_analytics',   ["customer","churn","segmentation","loyalty","retention","lifetime value","CLV","personalisation","personalization","marketing","campaign","conversion","recommendation","CRM"]],
+    ['operations',           ["logistics","inventory","warehouse","supply chain","demand","delivery","shipping","supplier","procurement","lead time","ERP","fulfillment","lean","operations"]],
+    ['ai_strategy',          ["governance","strategy","transformation","adoption","maturity","ROI","explainability","responsible AI","ethics","regulation","compliance","framework","deployment","organization"]],
+    ['nlp_business',         ["language","text","nlp","sentiment","classification","transformer","bert","gpt","corpus","token","embedding","summarization","document","chatbot","llm","news","report"]],
+    ['predictive_analytics', ["prediction","forecast","regression","classification","ensemble","feature","accuracy","AUC","model","analytics","decision","machine learning","deep learning","neural"]],
+    ['sustainability',       ["climate","energy","carbon","emission","renewable","environment","sustainability","green","solar","wind","consumption","ESG","net zero"]],
+    ['healthcare',           ["health","patient","clinical","hospital","medical","diagnosis","treatment","disease","ehr","mortality","readmission","icu","pharmaceutical"]],
+    ['computer_vision',      ["image","vision","detection","segmentation","cnn","convolutional","object","recognition","pixel","visual","camera","inspection","defect"]],
   ];
   let best = ["general", 0];
   for (const [k, words] of domains) {
     let score = 0;
-    for (const w of words) { const re = new RegExp(`\\b${w}\\b`, 'i'); if (re.test(n)) score += 2; else if (n.includes(w)) score += 1; }
+    for (const w of words) { const re = new RegExp(`\\b${w.replace(/\s/g,'\\s+')}\\b`, 'i'); if (re.test(n)) score += 2; else if (n.includes(w)) score += 1; }
     if (score > best[1]) best = [k, score];
   }
   return best[0];
@@ -379,74 +381,305 @@ function inferPaperInfo(text) {
 }
 
 // ── AGENT 1 ───────────────────────────────────────────────────────────────
+// ── AI FOR BUSINESS PAPERS DATABASE ──────────────────────────────────────
+// Each paper has: citation, topic_area, problems, solutions, further_research, connection
+// All papers are framed through the lens of AI applied to business contexts.
 const PAPERS_DB = {
-  healthcare: [
-    { title: "Wang, H. et al. (2024) 'Clinical risk prediction with foundation models'", journal: "Journal of Biomedical Informatics, 156, 104589", reason: "Directly addresses foundation model use in clinical settings — aligns with the paper's focus on predictive modeling and patient outcome analysis. Bridges the methodological approach to real hospital deployment." },
-    { title: "Gomez, A. & Patel, R. (2023) 'Federated learning for readmission forecasting'", journal: "Artificial Intelligence in Medicine, 140, 102487", reason: "Federated learning tackles the privacy-preserving challenge prevalent in clinical data — relevant if the uploaded paper explores patient data restrictions or cross-institutional generalization." },
-    { title: "Morris, J. & Allen, E. (2020) 'Bias auditing in predictive health analytics'", journal: "Health Informatics Journal, 26(4), pp. 2985-3001", reason: "Addresses fairness gaps identified as research challenges in the domain — complements the paper's likely discussion of model accountability in clinical decisions." },
-    { title: "Chen, L. et al. (2021) 'Transfer learning for diagnostic imaging'", journal: "Computers in Biology and Medicine, 134, 104493", reason: "Transfer learning is a frequently cited solution to limited labelled medical data — relevant to methodological gaps the paper likely highlights." },
-    { title: "Ibrahim, S. et al. (2022) 'Explainable ICU deterioration models'", journal: "IEEE Access, 10, pp. 99210-99224", reason: "Explainability in high-stakes clinical environments directly addresses deployment barriers mentioned across healthcare AI literature." },
+  // ── PREDICTIVE ANALYTICS & BUSINESS DECISION-MAKING ──
+  predictive_analytics: [
+    {
+      citation: "Davenport, T.H. & Harris, J. (2007) 'Competing on Analytics: The New Science of Winning'",
+      journal: "Harvard Business School Press",
+      topic_area: "AI Strategy & Business Analytics",
+      problems: "Organisations struggle to translate analytical capabilities into sustained competitive advantage; data silos and lack of executive buy-in hinder enterprise-wide adoption.",
+      solutions: "Authors propose an analytical maturity model — from localised reporting to enterprise-wide predictive optimisation — and recommend aligning analytics strategy with C-suite decision-making.",
+      further_research: "Authors call for longitudinal studies on ROI of analytics investments across industries, and research into change management barriers to analytical adoption.",
+      connection: "Foundational framework for any thesis addressing how AI or predictive models are deployed for business value — directly supports the strategic framing of the research problem."
+    },
+    {
+      citation: "Brynjolfsson, E. & McElheran, K. (2016) 'The Rapid Adoption of Data-Driven Decision-Making'",
+      journal: "American Economic Review, 106(5), pp. 133-139",
+      topic_area: "Data-Driven Decision Making / AI ROI",
+      problems: "Firms that invest in data-driven decision-making (DDD) tools see productivity gains, but adoption is uneven — smaller firms and less digitised industries lag behind.",
+      solutions: "The paper demonstrates that DDD adoption correlates with 5–6% higher productivity, recommending investment in both technology infrastructure and analytical talent.",
+      further_research: "Authors call for causal identification studies and sector-specific analyses of DDD's impact on innovation and organisational structure.",
+      connection: "Provides empirical grounding for business value arguments in any AI-for-business thesis — essential for justifying the practical impact of the proposed research."
+    },
+    {
+      citation: "Shmueli, G. & Koppius, O.R. (2011) 'Predictive Analytics in Information Systems Research'",
+      journal: "MIS Quarterly, 35(3), pp. 553-572",
+      topic_area: "Predictive Modelling Methodology",
+      problems: "Academic IS research over-emphasises explanatory models while industry demands predictive accuracy — the two goals require fundamentally different modelling philosophies.",
+      solutions: "Authors introduce a clear framework separating explanatory from predictive modelling, advocating for out-of-sample evaluation and business-relevant performance metrics.",
+      further_research: "Recommends developing evaluation benchmarks tailored to business prediction tasks and building predictive theory in IS.",
+      connection: "Critical methodological reference for any thesis proposing a predictive model — clarifies the distinction between statistical explanation and business prediction."
+    },
+    {
+      citation: "Mikalef, P. et al. (2020) 'Big Data Analytics Capability and Firm Performance'",
+      journal: "Journal of Business Research, 114, pp. 261-275",
+      topic_area: "AI Capability & Firm Performance",
+      problems: "It is unclear which organisational capabilities mediate the relationship between big data analytics investment and actual firm performance improvement.",
+      solutions: "A resource-based view framework identifies data integration, analytical talent, and leadership support as mediating capabilities — firms must develop all three jointly.",
+      further_research: "Calls for industry-specific replication studies and longitudinal tracking of analytics capability development.",
+      connection: "Supports thesis arguments about organisational preconditions for AI deployment — relevant when the paper addresses adoption barriers or implementation gaps."
+    },
   ],
+  // ── CUSTOMER ANALYTICS & MARKETING AI ──
+  customer_analytics: [
+    {
+      citation: "Wedel, M. & Kannan, P.K. (2016) 'Marketing Analytics for Data-Rich Environments'",
+      journal: "Journal of Marketing, 80(6), pp. 97-121",
+      topic_area: "Marketing AI & Customer Analytics",
+      problems: "The explosion of customer data (clickstreams, social, IoT) overwhelms traditional marketing models that were designed for sparse, survey-based inputs.",
+      solutions: "Authors propose a data-rich marketing analytics framework combining machine learning with causal inference, enabling personalisation at scale while preserving attribution validity.",
+      further_research: "Recommend research into privacy-preserving personalisation and the measurement of long-run brand equity through digital signals.",
+      connection: "Directly relevant for theses addressing customer segmentation, churn prediction, or marketing mix optimisation using ML — bridges academic marketing theory and business AI practice."
+    },
+    {
+      citation: "Verhoef, P.C. et al. (2021) 'Digital Transformation: A Multidisciplinary Reflection and Research Agenda'",
+      journal: "Journal of Business Research, 122, pp. 889-901",
+      topic_area: "Digital Transformation & AI Adoption",
+      problems: "Digital transformation initiatives fail at high rates due to unclear value propositions, technology-strategy misalignment, and workforce readiness gaps.",
+      solutions: "A multidisciplinary framework is proposed integrating strategy, operations, and people management — success requires orchestrating all three simultaneously.",
+      further_research: "Authors call for sector-specific transformation roadmaps and longitudinal measurement of digital maturity against business outcomes.",
+      connection: "Essential framing paper for any AI-for-business thesis — contextualises AI initiatives within the broader transformation challenges organisations face."
+    },
+    {
+      citation: "Kumar, V. & Reinartz, W. (2016) 'Creating Enduring Customer Value'",
+      journal: "Journal of Marketing, 80(6), pp. 36-68",
+      topic_area: "Customer Lifetime Value / AI in CRM",
+      problems: "Firms misallocate marketing resources by treating customers homogeneously rather than optimising for long-term value, leading to unprofitable retention spend.",
+      solutions: "Customer Lifetime Value (CLV) models integrating purchase behaviour, service cost, and referral value enable firms to allocate resources toward highest-potential customers.",
+      further_research: "Calls for dynamic CLV models that update in real time and research into CLV in subscription-based and platform business models.",
+      connection: "Foundational for any thesis proposing AI-driven customer value prediction — provides the business justification and modelling framework for CLV-based decision systems."
+    },
+    {
+      citation: "Huang, M.H. & Rust, R.T. (2021) 'A strategic framework for artificial intelligence in marketing'",
+      journal: "Journal of the Academy of Marketing Science, 49(1), pp. 30-50",
+      topic_area: "AI Strategy in Marketing",
+      problems: "Marketers lack a principled framework to decide which tasks should be automated by AI versus handled by humans, leading to under- or over-automation.",
+      solutions: "A four-stage AI intelligence model (mechanical, thinking, feeling, social AI) guides firms on when AI replaces, augments, or assists human marketers.",
+      further_research: "Authors recommend empirical testing of the framework across B2B/B2C contexts and research into consumer acceptance of AI-generated content.",
+      connection: "Directly relevant for theses on AI augmentation in business functions — provides the strategic vocabulary to frame automation vs. augmentation trade-offs."
+    },
+  ],
+  // ── FINANCIAL AI & RISK ──
   finance: [
-    { title: "Rahman, F. & Cooper, D. (2024) 'Graph neural fraud detection'", journal: "Expert Systems with Applications, 245, 123412", reason: "Graph-based approaches capture relational fraud signals missed by tabular models — relevant when the paper addresses transaction network analysis." },
-    { title: "Li, Y. et al. (2023) 'Credit scoring under economic shift'", journal: "Decision Support Systems, 170, 113934", reason: "Model robustness under distribution shift is a core challenge in finance AI — aligns with temporal generalization issues the paper may raise." },
-    { title: "Nolan, P. & Singh, A. (2022) 'Interpretable AML alert prioritization'", journal: "Knowledge-Based Systems, 243, 108470", reason: "Regulatory compliance (AML) demands interpretable outputs — directly relevant if the paper explores compliance-driven ML constraints." },
-    { title: "Marquez, J. et al. (2021) 'Forecasting SME default risk'", journal: "European Journal of Operational Research, 295(1), pp. 213-229", reason: "SME default is a high-impact underrepresented domain in credit risk — addresses the research gap in extending models beyond large borrower datasets." },
-    { title: "Evans, C. & Berg, T. (2020) 'ML fairness in consumer finance'", journal: "Journal of Financial Data Science, 2(3), pp. 40-58", reason: "Fairness constraints in lending algorithms are increasingly regulated — relevant to any paper exploring socially accountable financial prediction." },
+    {
+      citation: "Bartram, S.M. et al. (2021) 'Machine Learning for Active Portfolio Management'",
+      journal: "Journal of Financial Data Science, 3(3), pp. 9-30",
+      topic_area: "Financial AI / Portfolio Optimisation",
+      problems: "Traditional portfolio optimisation relies on distributional assumptions (e.g., normality) that real-world returns violate, leading to suboptimal allocation and underestimated tail risk.",
+      solutions: "ML models (random forests, gradient boosting) trained on factor-based signals outperform classical mean-variance optimisation on risk-adjusted returns, particularly during market stress.",
+      further_research: "Authors recommend live trading evaluation of ML strategies and research into explainability requirements for ML-driven investment decisions under MiFID II.",
+      connection: "Central reference for any thesis applying ML to financial markets — provides both empirical benchmarks and regulatory context for algorithmic investment systems."
+    },
+    {
+      citation: "Altman, E.I. et al. (2020) 'Financial Distress Prediction in an International Context'",
+      journal: "Journal of International Money and Finance, 104, 102125",
+      topic_area: "Credit Risk / AI in Banking",
+      problems: "Classic bankruptcy prediction models (e.g., Z-Score) degrade in accuracy when applied to non-US markets or modern financial structures, creating misleading risk signals.",
+      solutions: "ML-augmented distress models incorporating macroeconomic features and market-implied variables significantly improve cross-country predictive accuracy.",
+      further_research: "Calls for real-time credit monitoring systems and research into ML model performance during structural economic breaks.",
+      connection: "Essential for theses on credit scoring, default prediction, or AI in banking — provides the benchmark against which novel ML approaches should be compared."
+    },
+    {
+      citation: "Lopez-Lira, T. & Tang, Y. (2023) 'Can ChatGPT Forecast Stock Price Movements?'",
+      journal: "Review of Finance (forthcoming), arXiv:2304.07619",
+      topic_area: "LLMs in Finance / NLP for Business",
+      problems: "Unstructured financial news and social media contain forward-looking signals that numerical models cannot capture — but extracting them at scale requires robust NLP.",
+      solutions: "GPT-based sentiment analysis of news headlines generates trading signals that predict next-day stock returns, outperforming lexicon-based approaches.",
+      further_research: "Authors recommend research into hallucination risks in financial LLM applications, regulatory implications, and multi-lingual financial NLP.",
+      connection: "Highly relevant for any thesis exploring LLMs or NLP in business intelligence — demonstrates real financial value of language models beyond text generation."
+    },
+    {
+      citation: "Bussmann, N. et al. (2021) 'Explainable AI in Credit Risk Management'",
+      journal: "Frontiers in Artificial Intelligence, 4, 26",
+      topic_area: "Explainable AI / Regulatory Compliance",
+      problems: "Credit decisions made by black-box ML models cannot be explained to regulators or applicants, violating GDPR Article 22 and Fair Lending laws.",
+      solutions: "A hybrid XGBoost + SHAP framework is shown to match neural network accuracy while producing legally compliant explanations for individual lending decisions.",
+      further_research: "Recommends stress-testing explainability methods under distribution shift and developing regulatory sandboxes for XAI in financial services.",
+      connection: "Critical reference for any thesis addressing AI governance, regulatory compliance, or the explainability-accuracy trade-off in business AI systems."
+    },
   ],
-  education: [
-    { title: "Namoun, A. & Alshanqiti, A. (2021) 'Predicting student performance using ML'", journal: "IEEE Access, 9, pp. 6327-6346", reason: "Comprehensive review of predictive models for academic outcomes — provides methodological benchmarks relevant to the paper's analytical scope." },
-    { title: "Kotsiantis, S. et al. (2010) 'Educational data mining: a case study for predicting dropout'", journal: "Journal of Educational Technology & Society, 13(2), pp. 36-49", reason: "Foundational work establishing dropout prediction benchmarks — essential for situating the uploaded paper within the historical research trajectory." },
-    { title: "Hlosta, M. et al. (2017) 'Ouroboros: early identification of at-risk students'", journal: "ACM LAK '17 Conference", reason: "Early warning systems directly address the intervention timeline gap — relevant if the paper discusses when predictions are most actionable." },
-    { title: "Xing, W. & Du, D. (2019) 'Dropout prediction in MOOCs'", journal: "Journal of Educational Technology & Society, 22(1), pp. 25-39", reason: "MOOC context extends findings to online learning environments, broadening applicability beyond traditional classrooms as the paper may discuss." },
-    { title: "Aulck, L. et al. (2017) 'Predicting student dropout in higher education'", journal: "ICML Workshop on #Data4Good", reason: "Uses public university data and simple features — useful contrast to complex deep learning approaches, relevant for ablation discussions." },
+  // ── OPERATIONS & SUPPLY CHAIN AI ──
+  operations: [
+    {
+      citation: "Carbonneau, R. et al. (2008) 'Application of ML for Supply Chain Demand Forecasting'",
+      journal: "European Journal of Operational Research, 184(3), pp. 1140-1154",
+      topic_area: "AI in Operations / Demand Forecasting",
+      problems: "Classical time-series forecasting methods (ARIMA, exponential smoothing) fail to capture non-linear demand patterns driven by promotions, seasonality, and external shocks.",
+      solutions: "Recurrent neural networks and decision trees outperform classical methods on intermittent and lumpy demand series, especially with exogenous variable inputs.",
+      further_research: "Authors call for multi-step forecasting evaluation frameworks and real-time adaptive models that update with streaming POS data.",
+      connection: "Foundational benchmark for supply chain AI theses — establishes the performance baseline that any novel approach must exceed to claim contribution."
+    },
+    {
+      citation: "Choi, T.M. et al. (2022) 'Artificial Intelligence in Operations Management and Supply Chain Management'",
+      journal: "Production and Operations Management, 31(3), pp. 630-650",
+      topic_area: "AI in Operations Management",
+      problems: "AI adoption in operations is fragmented — firms pilot isolated AI tools without integrating them into end-to-end decision processes, limiting aggregate value creation.",
+      solutions: "A structured AI integration roadmap is proposed: starting with automation of repetitive decisions, then advancing to predictive and prescriptive analytics across the supply network.",
+      further_research: "Recommends research into AI-human teaming in operations, AI for circular economy, and cross-firm AI coordination in platform supply chains.",
+      connection: "Essential strategic framing for operations-focused AI theses — provides the language to position a specific AI application within the broader operational transformation agenda."
+    },
+    {
+      citation: "Waller, M.A. & Fawcett, S.E. (2013) 'Data Science, Predictive Analytics, and Big Data'",
+      journal: "Journal of Business Logistics, 34(2), pp. 77-84",
+      topic_area: "Big Data in Logistics / Supply Chain",
+      problems: "Supply chain managers are overwhelmed with transactional data but lack the analytical infrastructure and talent to convert it into predictive decision support.",
+      solutions: "The paper proposes a data science competency model for logistics, advocating for collaboration between data scientists and domain experts to build actionable forecasting tools.",
+      further_research: "Calls for longitudinal studies on data science capability building in logistics firms and evaluation of emerging IoT data sources.",
+      connection: "Relevant for any thesis addressing operational AI implementation — frames the talent and infrastructure gap that pure technical solutions must account for."
+    },
   ],
-  supply_chain: [
-    { title: "Carbonneau, R. et al. (2008) 'Application of ML for supply chain demand forecasting'", journal: "European Journal of Operational Research, 184(3), pp. 1140-1154", reason: "Establishes the ML-in-supply-chain benchmark — foundational for contextualizing modern deep learning extensions." },
-    { title: "Jiang, P. et al. (2022) 'Deep learning for supply chain disruption prediction'", journal: "International Journal of Production Research, 60(14)", reason: "Disruption prediction is a gap frequently cited in logistics literature — relevant if the paper addresses resilience or risk modeling." },
-    { title: "Syntetos, A. et al. (2016) 'Supply chain forecasting: theory, practice, and challenges'", journal: "European Journal of Operational Research, 252(1), pp. 1-26", reason: "Identifies key forecasting challenges such as intermittent demand and multi-echelon complexity — directly referenced by the paper's problem framing." },
-    { title: "Cavalcante, I. et al. (2019) 'A supervised ML approach to data-driven simulation'", journal: "Expert Systems with Applications, 115, pp. 72-81", reason: "Simulation + ML hybrid fills the gap between prescriptive analytics and real-time decision-making — relevant for methodology discussions." },
+  // ── AI STRATEGY & GOVERNANCE ──
+  ai_strategy: [
+    {
+      citation: "Ransbotham, S. et al. (2020) 'Expanding AI's Impact With Organizational Learning'",
+      journal: "MIT Sloan Management Review, Fall 2020, pp. 1-8",
+      topic_area: "AI Strategy / Organisational Learning",
+      problems: "Organisations that deploy AI as isolated tools rather than as a learning system fail to compound intelligence over time, limiting long-term competitive differentiation.",
+      solutions: "A learning loop model is proposed where AI systems improve through feedback from users and operations, creating a flywheel of compounding business value.",
+      further_research: "Authors recommend empirical measurement of AI learning rates across industries and research into governance structures that sustain AI-driven learning loops.",
+      connection: "Key reference for theses on AI implementation strategy — provides the organisational learning framing that distinguishes transformative AI adoption from mere automation."
+    },
+    {
+      citation: "Cath, C. et al. (2018) 'Artificial Intelligence and the Good Society'",
+      journal: "Science and Engineering Ethics, 24(3), pp. 959-976",
+      topic_area: "AI Ethics & Responsible Business AI",
+      problems: "The rapid deployment of AI in business contexts raises unresolved ethical issues — bias, accountability gaps, and lack of transparency — that erode public trust.",
+      solutions: "A multi-stakeholder AI governance framework is proposed combining technical standards, regulatory oversight, and corporate ethics boards to ensure responsible deployment.",
+      further_research: "Recommends developing sector-specific AI ethics codes and empirical research on the business cost of unethical AI practices.",
+      connection: "Essential for any thesis addressing AI governance, fairness, or responsible AI in a business context — provides the ethical vocabulary and governance scaffolding."
+    },
+    {
+      citation: "Fountaine, T. et al. (2019) 'Building the AI-Powered Organization'",
+      journal: "Harvard Business Review, July–August 2019",
+      topic_area: "AI Transformation / Business Strategy",
+      problems: "Most AI transformations stall in pilot stage — organisations underestimate the cultural, structural, and workflow redesign required to operationalise AI at scale.",
+      solutions: "McKinsey's AI adoption model emphasises building cross-functional AI teams, embedding AI in core workflows, and creating feedback loops between AI models and business outcomes.",
+      further_research: "Authors call for case-study research into successful large-scale AI deployments and measurement of AI maturity across business units.",
+      connection: "Highly relevant for theses proposing AI implementations in business — provides the organisational deployment framework that technical proposals must be grounded in."
+    },
+    {
+      citation: "Agrawal, A. et al. (2018) 'Prediction Machines: The Simple Economics of Artificial Intelligence'",
+      journal: "Harvard Business School Press",
+      topic_area: "AI Economics / Business Value of AI",
+      problems: "Business leaders misunderstand AI as a general intelligence tool rather than a prediction cost-reduction technology, leading to misaligned investment and unrealistic expectations.",
+      solutions: "The book repositions AI as a tool that dramatically lowers prediction costs, shifting the economics of business decisions across all domains where uncertainty matters.",
+      further_research: "Recommends research into complementary investment in human judgement and decision design as AI handles more prediction tasks.",
+      connection: "Foundational economic framing for AI-for-business theses — provides a rigorous yet accessible lens to frame the business case for any AI application."
+    },
   ],
-  sustainability: [
-    { title: "Park, J. & Silva, R. (2024) 'Carbon-aware forecasting for smart grids'", journal: "Applied Energy, 363, 122966", reason: "Carbon-aware systems represent a practical deployment of energy prediction — directly relevant if the paper proposes real-time emission optimization." },
-    { title: "Mendez, L. et al. (2023) 'Deep learning for building energy optimization'", journal: "Energy and Buildings, 290, 113048", reason: "Building-level optimization is the micro-scale complement to grid-level forecasting — relevant for scope definition in the research gaps." },
-    { title: "Quinn, T. & Abbas, S. (2022) 'Climate risk scoring with geospatial signals'", journal: "Environmental Modelling and Software, 156, 105477", reason: "Geospatial features improve climate risk models — relevant if the paper incorporates spatial data or geographic heterogeneity." },
-    { title: "Nguyen, P. & Hart, A. (2021) 'Predictive maintenance for wind turbines'", journal: "Renewable Energy, 176, pp. 654-668", reason: "Wind turbine maintenance connects renewable energy reliability to ML — fills the operational gap between forecasting and asset management." },
-    { title: "Carter, B. (2020) 'Data-driven emissions baselines'", journal: "Sustainable Cities and Society, 61, 102342", reason: "Baseline establishment is a methodological prerequisite for impact measurement — relevant to evaluation design in the paper." },
+  // ── NLP & LANGUAGE AI IN BUSINESS ──
+  nlp_business: [
+    {
+      citation: "Loureiro, D. et al. (2022) 'TimeLMs: Diachronic Language Models from Twitter'",
+      journal: "ACL 2022 System Demonstrations",
+      topic_area: "NLP / Temporal Language Models for Business",
+      problems: "Static pre-trained language models become outdated as business language, slang, and terminology evolve — models trained on older corpora produce degraded outputs on current data.",
+      solutions: "Continuously updated language models retrained on rolling Twitter data maintain temporal relevance — a proxy architecture for business-domain NLP systems.",
+      further_research: "Authors recommend research into efficient continual learning strategies for domain-specific business NLP and evaluation frameworks for temporal model decay.",
+      connection: "Relevant for theses applying NLP to business intelligence, customer feedback, or financial text — highlights the temporal maintenance problem in deployed language models."
+    },
+    {
+      citation: "Araci, D. (2019) 'FinBERT: Financial Sentiment Analysis with Pre-trained Language Models'",
+      journal: "arXiv:1908.10063",
+      topic_area: "Financial NLP / Sentiment Analysis",
+      problems: "General-purpose NLP models (BERT, RoBERTa) underperform on financial text because domain-specific vocabulary (earnings releases, analyst reports) is underrepresented in general pre-training corpora.",
+      solutions: "Domain-adaptive pre-training on financial corpora (10-K filings, Reuters) produces FinBERT — a model that significantly outperforms BERT on financial sentiment classification.",
+      further_research: "Recommends extending domain-adaptive pre-training to multilingual financial corpora and building financial NLP benchmarks beyond English.",
+      connection: "Key reference for any thesis applying NLP to financial or business text — demonstrates that domain adaptation is necessary and achievable within a thesis scope."
+    },
   ],
-  nlp: [
-    { title: "Devlin, J. et al. (2019) 'BERT: Pre-training of deep bidirectional transformers'", journal: "NAACL-HLT 2019", reason: "BERT is the foundational architecture for most NLP transfer learning — essential reference if the paper builds on or evaluates transformer models." },
-    { title: "Brown, T. et al. (2020) 'Language models are few-shot learners (GPT-3)'", journal: "NeurIPS 2020", reason: "Establishes few-shot learning as a paradigm — relevant if the paper addresses low-resource or zero-shot text classification scenarios." },
-    { title: "Liu, Y. et al. (2019) 'RoBERTa: A robustly optimized BERT pretraining approach'", journal: "arXiv:1907.11692", reason: "RoBERTa provides stronger baselines than BERT — relevant for ablation and benchmark discussions in the paper." },
-    { title: "Vaswani, A. et al. (2017) 'Attention is all you need'", journal: "NeurIPS 2017", reason: "Transformer architecture paper — foundational reference if the paper uses attention mechanisms or sequence modeling." },
-  ],
-  computer_vision: [
-    { title: "He, K. et al. (2016) 'Deep Residual Learning for Image Recognition'", journal: "CVPR 2016", reason: "ResNets are the backbone of modern CV systems — relevant baseline if the paper proposes novel architectures or transfer learning experiments." },
-    { title: "Dosovitskiy, A. et al. (2021) 'An Image is Worth 16x16 Words: ViT'", journal: "ICLR 2021", reason: "Vision Transformers challenge CNN dominance — relevant if the paper explores attention-based vision architectures." },
-    { title: "Kirillov, A. et al. (2023) 'Segment Anything'", journal: "ICCV 2023", reason: "Foundation models for segmentation establish a new benchmark — directly relevant if the paper addresses object detection or segmentation tasks." },
-    { title: "Lin, T. et al. (2017) 'Focal Loss for Dense Object Detection'", journal: "ICCV 2017", reason: "Class imbalance in detection is a core challenge — relevant if the paper evaluates rare-class detection performance." },
-  ],
+  // ── GENERAL AI FOR BUSINESS (fallback) ──
   general: [
-    { title: "Breiman, L. (2001) 'Random Forests'", journal: "Machine Learning, 45(1), pp. 5-32", reason: "Foundational ensemble method — benchmark reference relevant for any paper comparing classical ML approaches." },
-    { title: "Chen, T. & Guestrin, C. (2016) 'XGBoost: A Scalable Tree Boosting System'", journal: "ACM KDD 2016", reason: "XGBoost is the dominant tabular baseline — relevant as a comparison point if the paper proposes deep learning alternatives." },
-    { title: "Lundberg, S. & Lee, S. (2017) 'A Unified Approach to Interpreting Model Predictions (SHAP)'", journal: "NeurIPS 2017", reason: "SHAP is the standard for local model explainability — directly relevant if the paper discusses interpretability or fairness." },
-    { title: "Guo, C. et al. (2017) 'On Calibration of Modern Neural Networks'", journal: "ICML 2017", reason: "Model calibration is frequently overlooked — relevant if the paper evaluates probabilistic outputs or confidence scores." },
+    {
+      citation: "Agrawal, A. et al. (2018) 'Prediction Machines: The Simple Economics of Artificial Intelligence'",
+      journal: "Harvard Business School Press",
+      topic_area: "AI Economics / Business Value of AI",
+      problems: "Business leaders misunderstand AI as a general intelligence tool rather than a prediction cost-reduction technology, leading to misaligned investment and unrealistic expectations.",
+      solutions: "Repositions AI as a tool that dramatically lowers prediction costs, shifting the economics of business decisions across all domains where uncertainty matters.",
+      further_research: "Recommends research into complementary investment in human judgement and decision design as AI handles more prediction tasks.",
+      connection: "Foundational economic framing for any AI-for-business thesis — provides a rigorous lens to frame the business case for the proposed AI application."
+    },
+    {
+      citation: "Fountaine, T. et al. (2019) 'Building the AI-Powered Organization'",
+      journal: "Harvard Business Review, July–August 2019",
+      topic_area: "AI Transformation / Business Strategy",
+      problems: "AI transformations stall in pilot stage — organisations underestimate the cultural, structural, and workflow redesign required to operationalise AI at scale.",
+      solutions: "Cross-functional AI teams, workflow embedding, and outcome feedback loops are proposed as the three pillars of successful enterprise AI transformation.",
+      further_research: "Calls for case-study research into large-scale AI deployments and AI maturity measurement frameworks.",
+      connection: "Provides the organisational deployment framework that any technically-focused thesis must be grounded in to claim real-world impact."
+    },
+    {
+      citation: "Davenport, T.H. & Harris, J. (2007) 'Competing on Analytics: The New Science of Winning'",
+      journal: "Harvard Business School Press",
+      topic_area: "AI Strategy & Business Analytics",
+      problems: "Organisations struggle to translate analytical capabilities into sustained competitive advantage due to data silos and lack of executive buy-in.",
+      solutions: "An analytical maturity model — from localised reporting to enterprise-wide optimisation — aligns analytics strategy with C-suite decision-making.",
+      further_research: "Longitudinal studies on analytics ROI and change management barriers to analytical adoption.",
+      connection: "Foundational strategy reference for any AI-for-business thesis — situates the technical contribution within the business capability-building literature."
+    },
+    {
+      citation: "Ransbotham, S. et al. (2020) 'Expanding AI's Impact With Organizational Learning'",
+      journal: "MIT Sloan Management Review, Fall 2020",
+      topic_area: "AI Strategy / Organisational Learning",
+      problems: "Isolated AI tools fail to compound intelligence over time, limiting long-term competitive differentiation for firms that treat AI as one-off deployments.",
+      solutions: "A learning loop model creates a flywheel of compounding business value by feeding AI outputs back into operational processes.",
+      further_research: "Empirical measurement of AI learning rates across industries and governance structures for sustained AI-driven learning.",
+      connection: "Key reference for any thesis addressing long-term AI value creation — frames the difference between deploying a model and building an intelligent system."
+    },
+    {
+      citation: "Bussmann, N. et al. (2021) 'Explainable AI in Credit Risk Management'",
+      journal: "Frontiers in Artificial Intelligence, 4, 26",
+      topic_area: "Explainable AI / Regulatory Compliance",
+      problems: "Black-box ML models cannot be explained to regulators or stakeholders, creating compliance risk under GDPR and sector-specific regulations.",
+      solutions: "Hybrid XGBoost + SHAP framework matches neural network accuracy while producing legally compliant explanations for individual decisions.",
+      further_research: "Stress-testing explainability methods under distribution shift and regulatory sandbox development for XAI.",
+      connection: "Critical reference for any thesis addressing AI governance or explainability — provides both the technical solution and the regulatory motivation."
+    },
   ]
 };
 
+// ── DOMAIN → PAPERS MAPPING (AI for Business lens) ───────────────────────
+function mapDomainToPapers(d) {
+  const map = {
+    healthcare:    PAPERS_DB.ai_strategy.slice(0,2).concat(PAPERS_DB.general.slice(0,3)),
+    finance:       PAPERS_DB.finance,
+    education:     PAPERS_DB.ai_strategy.concat(PAPERS_DB.predictive_analytics.slice(0,2)),
+    supply_chain:  PAPERS_DB.operations,
+    sustainability:PAPERS_DB.ai_strategy.slice(0,2).concat(PAPERS_DB.predictive_analytics.slice(0,2)),
+    nlp:           PAPERS_DB.nlp_business.concat(PAPERS_DB.finance.slice(2,4)),
+    computer_vision: PAPERS_DB.ai_strategy.slice(0,2).concat(PAPERS_DB.operations.slice(0,2)),
+    predictive_analytics: PAPERS_DB.predictive_analytics,
+    customer_analytics:   PAPERS_DB.customer_analytics,
+    ai_strategy:          PAPERS_DB.ai_strategy,
+    operations:           PAPERS_DB.operations,
+    nlp_business:         PAPERS_DB.nlp_business.concat(PAPERS_DB.ai_strategy.slice(0,2)),
+    general:       PAPERS_DB.general
+  };
+  return map[d] || PAPERS_DB.general;
+}
+
 function a1(text, info) {
   const d = info.d;
-  const papers = PAPERS_DB[d] || PAPERS_DB.general;
+  const papers = mapDomainToPapers(d);
 
+  // Business-framed further research gaps per domain
   const gaps = {
-    healthcare: ["Models lack external validation across hospital systems.","Fairness and bias auditing remain underexplored in clinical AI.","Few studies address real-time inference constraints in ICU settings."],
-    finance: ["Models rarely generalize across economic regimes.","Regulatory interpretability requirements conflict with model complexity.","Minority class fraud detection remains an open challenge."],
-    education: ["Most models use single-institution data, limiting generalizability.","Temporal dynamics of student engagement are undermodeled.","Early intervention windows are not well-defined in existing literature."],
-    supply_chain: ["Multi-echelon demand uncertainty is underexplored.","Most models do not account for external disruption events.","Real-time adaptive forecasting remains computationally expensive."],
-    sustainability: ["Geospatial heterogeneity is rarely incorporated.","Cross-sectoral energy interactions are neglected.","Long-horizon emission forecasting under policy uncertainty is limited."],
-    nlp: ["Low-resource language performance degrades significantly.","Cross-domain generalization is inconsistent.","Evaluation metrics do not capture semantic faithfulness."],
-    computer_vision: ["Models are brittle to distribution shift and adversarial inputs.","Real-world deployment under compute constraints is underexplored.","Rare class and long-tail object detection performance is weak."],
-    general: ["Limited deployment evidence in production environments.","Weak coverage of fairness and responsible AI practices.","Few longitudinal evaluations across multiple datasets."]
+    healthcare:    ["AI model deployment in clinical workflows lacks rigorous human-in-the-loop evaluation frameworks.","Explainability standards for clinical AI remain inconsistent across regulatory jurisdictions.","Cross-institutional data sharing protocols for AI training are underdeveloped."],
+    finance:       ["ML models for credit risk rarely generalise across economic regimes or geographies.","Regulatory interpretability requirements (GDPR, SR 11-7) create tension with model complexity.","Real-time risk monitoring systems that update models under concept drift are scarce."],
+    supply_chain:  ["Multi-echelon demand uncertainty propagation is undermodelled in current AI approaches.","Supply chain AI models rarely account for external disruption signals (geopolitical, weather).","Prescriptive analytics closing the loop between forecasting and automated ordering remains nascent."],
+    sustainability:["Long-horizon emission forecasting under policy uncertainty is underexplored.","Cross-sectoral energy interaction effects are neglected in current grid AI systems.","AI for circular economy and sustainability reporting automation are emerging but immature."],
+    nlp:           ["Temporal model decay in business-domain NLP applications is rarely measured.","Multilingual business NLP benchmarks beyond English are limited.","Evaluation frameworks for hallucination risk in business LLM applications are absent."],
+    computer_vision:["Edge deployment of computer vision under hardware constraints is underexplored.","Quality and defect classification AI rarely incorporates feedback from downstream business outcomes.","Long-tail rare-defect detection performance in industrial inspection is weak."],
+    predictive_analytics:["Causal identification in business predictive models is rarely attempted.","Predictive model monitoring and retraining pipelines for production drift are underspecified.","Business-relevant evaluation metrics beyond AUC/RMSE are not standardised."],
+    customer_analytics:["Dynamic CLV models updating in real time are scarce outside Big Tech.","Privacy-preserving personalisation approaches at SME scale are underdeveloped.","Attribution modelling in multi-touch digital journeys remains methodologically contested."],
+    ai_strategy:   ["Longitudinal measurement of AI maturity against business outcomes is absent.","Change management models specific to AI transformation are underdeveloped.","Governance frameworks for AI in regulated industries lack empirical validation."],
+    operations:    ["AI-human teaming models for operational decision-making lack empirical grounding.","Cross-firm AI coordination in platform supply chains is an emerging research gap.","Real-time prescriptive analytics integrated with ERP systems remain rare in practice."],
+    nlp_business:  ["Domain-adaptive pre-training for non-English business corpora is limited.","Regulatory compliance for LLM-generated business content is undefined.","Benchmarks for business NLP tasks beyond financial text are lacking."],
+    general:       ["AI deployment ROI measurement frameworks are inconsistent across industries.","Governance and accountability structures for business AI are underdeveloped.","Human-AI collaboration models for strategic decision-making lack empirical evidence."]
   };
 
   return {
@@ -466,39 +699,54 @@ const DATASETS_DB = {
     { name: "NHANES (CDC)", badge: "Alternative", desc: "National Health and Nutrition Examination Survey with demographics, lab tests, and clinical outcomes.", reason: "Enables population-level health modeling beyond hospital settings, useful for preventive care extensions of the paper's scope.", link: "https://wwwn.cdc.gov/nchs/nhanes/", rows: "~100K participants", free: true },
   ],
   finance: [
-    { name: "Home Credit Default Risk", badge: "Primary", desc: "Loan application dataset with credit history, demographics, and repayment records.", reason: "High-quality labelled default data with rich feature engineering opportunities — directly supports the paper's credit risk framing.", link: "https://www.kaggle.com/c/home-credit-default-risk/data", rows: "~350K applications", free: true },
-    { name: "IEEE-CIS Fraud Detection", badge: "Alternative", desc: "Real-world e-commerce transaction dataset with fraud labels from Vesta Corporation.", reason: "Class-imbalanced fraud dataset ideal for evaluating precision-recall trade-offs discussed in the paper's methodology.", link: "https://www.kaggle.com/c/ieee-fraud-detection/data", rows: "~590K transactions", free: true },
-    { name: "Lending Club Loan Data", badge: "Alternative", desc: "Historical loan data including loan status, credit grade, and borrower attributes.", reason: "Covers the full lending lifecycle — useful for research extending from prediction to policy simulation.", link: "https://www.kaggle.com/datasets/wordsforthewise/lending-club", rows: "~2.2M loans", free: true },
+    { name: "Home Credit Default Risk", badge: "Primary", desc: "Loan application dataset with credit history, demographics, and repayment records.", reason: "High-quality labelled default data with rich feature engineering opportunities — directly supports credit risk and AI-in-banking research.", link: "https://www.kaggle.com/c/home-credit-default-risk/data", rows: "~350K applications", free: true },
+    { name: "IEEE-CIS Fraud Detection", badge: "Alternative", desc: "Real-world e-commerce transaction dataset with fraud labels from Vesta Corporation.", reason: "Class-imbalanced fraud dataset — ideal for evaluating AI model precision in high-stakes financial decisions.", link: "https://www.kaggle.com/c/ieee-fraud-detection/data", rows: "~590K transactions", free: true },
+    { name: "Lending Club Loan Data", badge: "Alternative", desc: "Historical loan data including loan status, credit grade, and borrower attributes.", reason: "Covers the full lending lifecycle — useful for AI-driven credit policy simulation research.", link: "https://www.kaggle.com/datasets/wordsforthewise/lending-club", rows: "~2.2M loans", free: true },
   ],
-  education: [
-    { name: "OULAD (Open University)", badge: "Primary", desc: "Open University Learning Analytics Dataset with clickstream, assessment, and demographic data.", reason: "Anonymised, publicly accessible, and purpose-built for student outcome prediction — directly aligned with the paper's research goals.", link: "https://analyse.kmi.open.ac.uk/open_dataset", rows: "~32K students", free: true },
-    { name: "PISA (OECD)", badge: "Alternative", desc: "Programme for International Student Assessment across 80+ countries.", reason: "Enables cross-national comparisons — useful for generalizing the paper's findings beyond single-institution settings.", link: "https://www.oecd.org/pisa/data/", rows: "~600K students", free: true },
-    { name: "EdX Course Data (HarvardX)", badge: "Alternative", desc: "MOOC engagement and completion data from MIT and Harvard edX courses.", reason: "Large-scale online learning data fills the gap between traditional and digital education contexts.", link: "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/26147", rows: "~640K enrollments", free: true },
+  customer_analytics: [
+    { name: "E-Commerce Customer Churn (Kaggle)", badge: "Primary", desc: "Customer transaction and behavioural data with churn labels from a major e-commerce platform.", reason: "Purpose-built for churn prediction — directly supports CLV and customer retention AI models for an MBA AI for Business thesis.", link: "https://www.kaggle.com/datasets/ankitverma2010/ecommerce-customer-churn-analysis-and-prediction", rows: "~5.6K customers", free: true },
+    { name: "Online Retail II (UCI)", badge: "Alternative", desc: "Transactional data for a UK-based online retailer (2009–2011) with invoice and product details.", reason: "Enables RFM segmentation, market basket analysis, and CLV modelling — core business analytics applications.", link: "https://archive.ics.uci.edu/dataset/502/online+retail+ii", rows: "~1M transactions", free: true },
+    { name: "Brazilian E-Commerce (Olist)", badge: "Alternative", desc: "100K+ orders with product, seller, logistics, review, and payment data.", reason: "Multi-dimensional customer data supports omnichannel analytics research aligned with digital transformation themes.", link: "https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce", rows: "~100K orders", free: true },
   ],
-  supply_chain: [
-    { name: "Brazilian E-Commerce (Olist)", badge: "Primary", desc: "100K+ orders with product, seller, logistics, and review data from a Brazilian marketplace.", reason: "End-to-end supply chain data enables multi-objective optimization research aligned with the paper's framing.", link: "https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce", rows: "~100K orders", free: true },
-    { name: "M5 Forecasting Competition Data", badge: "Alternative", desc: "Walmart hierarchical sales data across US stores and product categories.", reason: "Benchmark dataset for demand forecasting at multiple temporal and geographic granularities — directly relevant to the research scope.", link: "https://www.kaggle.com/c/m5-forecasting-accuracy/data", rows: "~42K time series", free: true },
-    { name: "Supply Chain Shipment Pricing (USAID)", badge: "Alternative", desc: "Freight, shipment, and pricing data from global health supply chains.", reason: "Covers international logistics complexity including vendor selection and lead time variance discussed in the paper.", link: "https://www.kaggle.com/datasets/divyeshardeshana/supply-chain-shipment-pricing-data", rows: "~10K shipments", free: true },
+  operations: [
+    { name: "M5 Forecasting Competition (Walmart)", badge: "Primary", desc: "Hierarchical Walmart sales data across US stores, states, and product categories.", reason: "The industry benchmark for demand forecasting AI — directly comparable to literature and provides real business scale.", link: "https://www.kaggle.com/c/m5-forecasting-accuracy/data", rows: "~42K time series", free: true },
+    { name: "Brazilian E-Commerce (Olist)", badge: "Alternative", desc: "End-to-end supply chain data: orders, logistics, reviews, and seller performance.", reason: "Covers the full operations pipeline from ordering to delivery — enables multi-KPI business optimisation research.", link: "https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce", rows: "~100K orders", free: true },
+    { name: "Supply Chain Shipment Pricing (USAID)", badge: "Alternative", desc: "Freight and shipment pricing data from global supply chains with vendor and route details.", reason: "International operations data supports research on AI-driven procurement and logistics cost optimisation.", link: "https://www.kaggle.com/datasets/divyeshardeshana/supply-chain-shipment-pricing-data", rows: "~10K shipments", free: true },
+  ],
+  predictive_analytics: [
+    { name: "UCI Machine Learning Repository", badge: "Primary", desc: "500+ curated business-relevant datasets spanning classification, regression, and time-series tasks.", reason: "Gold-standard benchmarks for predictive analytics research — widely cited, reproducible, and peer-reviewed.", link: "https://archive.ics.uci.edu/", rows: "Varies by dataset", free: true },
+    { name: "Kaggle Business Datasets", badge: "Alternative", desc: "Curated business analytics competitions and datasets across HR, marketing, finance, and operations.", reason: "Real-world business datasets with community benchmarks — ideal for validating predictive models against practitioner baselines.", link: "https://www.kaggle.com/datasets?tags=13302-Business", rows: "Varies", free: true },
+    { name: "IBM HR Analytics Dataset", badge: "Alternative", desc: "Employee attrition and performance dataset with 35 features including satisfaction, role, and salary.", reason: "Widely used for people analytics research — relevant for AI-driven HR decision support theses.", link: "https://www.kaggle.com/datasets/pavansubhasht/ibm-hr-analytics-attrition-dataset", rows: "~1.5K employees", free: true },
+  ],
+  ai_strategy: [
+    { name: "MIT AI Index / Stanford HAI Data", badge: "Primary", desc: "Annual global AI adoption metrics, investment data, and corporate AI capability benchmarks.", reason: "Empirical foundation for AI strategy research — provides the macro-level business adoption context any governance thesis requires.", link: "https://aiindex.stanford.edu/report/", rows: "Annual reports", free: true },
+    { name: "McKinsey Global AI Survey Data", badge: "Alternative", desc: "Global enterprise survey on AI adoption maturity, investment, and barriers across industries.", reason: "Industry-level benchmarks for AI transformation research — supports empirical analysis of adoption patterns and ROI.", link: "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai", rows: "Annual survey", free: true },
+    { name: "OECD AI Policy Observatory", badge: "Alternative", desc: "Government and enterprise AI policy data across OECD countries including regulation and investment.", reason: "Cross-country governance data essential for AI ethics and regulatory compliance research in an MBA context.", link: "https://oecd.ai/en/data", rows: "Multi-year, 50+ countries", free: true },
+  ],
+  nlp_business: [
+    { name: "Financial PhraseBank (Malo et al.)", badge: "Primary", desc: "Manually annotated financial news sentences with positive/negative/neutral sentiment labels.", reason: "Standard benchmark for financial NLP — directly relevant for business text analytics and market sentiment research.", link: "https://www.kaggle.com/datasets/ankurzing/sentiment-analysis-for-financial-news", rows: "~4.8K sentences", free: true },
+    { name: "SEC EDGAR Filings (10-K, 8-K)", badge: "Alternative", desc: "Full-text corporate filings including earnings releases, risk disclosures, and MD&A sections.", reason: "Rich source of business language for NLP models — enables research on AI extraction of financial signals from regulatory documents.", link: "https://www.sec.gov/cgi-bin/browse-edgar", rows: "Millions of filings", free: true },
+    { name: "Amazon Product Reviews (McAuley)", badge: "Alternative", desc: "Millions of product reviews with ratings, categories, and helpfulness votes across domains.", reason: "Multi-domain customer feedback enables business sentiment analysis and product intelligence NLP research.", link: "https://nijianmo.github.io/amazon/index.html", rows: "~233M reviews", free: true },
   ],
   sustainability: [
-    { name: "UK Smart Meter Data (UKPN)", badge: "Primary", desc: "Half-hourly electricity consumption from residential and commercial meters across the UK.", reason: "High-frequency temporal data enables demand forecasting models at the granularity the paper's methodology requires.", link: "https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households", rows: "~5,500 households", free: true },
-    { name: "Open Power System Data (OPSD)", badge: "Alternative", desc: "Renewable generation, load, and weather data for European power systems.", reason: "Multi-country energy data supports generalization claims and cross-national model evaluation.", link: "https://open-power-system-data.org/", rows: "Multi-year, hourly", free: true },
-    { name: "EPA Emissions & Generation Resource Database", badge: "Alternative", desc: "US power plant emissions, fuel type, and generation capacity data.", reason: "Enables carbon footprint modeling linked to energy mix decisions — complements the paper's sustainability framing.", link: "https://www.epa.gov/egrid", rows: "Annual, all US plants", free: true },
+    { name: "UK Smart Meter Data (UKPN)", badge: "Primary", desc: "Half-hourly electricity consumption from residential and commercial meters across the UK.", reason: "High-frequency energy data enables demand forecasting and ESG reporting AI models at business-relevant granularity.", link: "https://data.london.gov.uk/dataset/smartmeter-energy-use-data-in-london-households", rows: "~5,500 households", free: true },
+    { name: "Open Power System Data (OPSD)", badge: "Alternative", desc: "Renewable generation, load, and weather data for European power systems.", reason: "Multi-country energy data supports ESG and carbon reporting AI research with cross-national business applicability.", link: "https://open-power-system-data.org/", rows: "Multi-year, hourly", free: true },
+    { name: "EPA eGRID (Emissions & Generation)", badge: "Alternative", desc: "US power plant emissions, fuel type, and generation capacity data by region.", reason: "Enables Scope 2 carbon attribution modelling — directly applicable for AI-driven ESG disclosure automation research.", link: "https://www.epa.gov/egrid", rows: "Annual, all US plants", free: true },
   ],
-  nlp: [
-    { name: "HuggingFace Datasets Hub", badge: "Primary", desc: "Unified access to 10,000+ NLP datasets including GLUE, SuperGLUE, and domain-specific corpora.", reason: "Central repository for NLP benchmarks — allows reproducible comparison with SOTA models referenced in the paper.", link: "https://huggingface.co/datasets", rows: "Varies by dataset", free: true },
-    { name: "Common Crawl", badge: "Alternative", desc: "Multi-petabyte web crawl data used to pre-train major language models.", reason: "Pre-training data source for contextualizing model knowledge — relevant if the paper discusses data contamination or training distribution.", link: "https://commoncrawl.org/", rows: "Billions of pages", free: true },
-    { name: "Amazon Product Reviews (McAuley)", badge: "Alternative", desc: "Millions of product reviews with ratings, categories, and helpfulness votes.", reason: "Widely used for sentiment analysis and opinion mining — applicable if the paper evaluates cross-domain NLP transfer.", link: "https://nijianmo.github.io/amazon/index.html", rows: "~233M reviews", free: true },
+  healthcare: [
+    { name: "MIMIC-IV (PhysioNet)", badge: "Primary", desc: "Large de-identified EHR database from Beth Israel Deaconess Medical Center.", reason: "Rich clinical data enables healthcare AI business case research on operational efficiency and cost reduction.", link: "https://physionet.org/content/mimiciv/", rows: "~380K admissions", free: true },
+    { name: "CMS Medicare Claims Data", badge: "Alternative", desc: "US Medicare provider and claims data with cost, utilisation, and quality metrics.", reason: "Business-side healthcare data — supports AI for healthcare cost management and value-based care research.", link: "https://data.cms.gov/", rows: "Millions of claims", free: true },
+    { name: "NHANES (CDC)", badge: "Alternative", desc: "National Health and Nutrition Examination Survey with demographics, lab tests, and clinical outcomes.", reason: "Population-level health data enables AI for preventive care business models and insurance analytics research.", link: "https://wwwn.cdc.gov/nchs/nhanes/", rows: "~100K participants", free: true },
   ],
   computer_vision: [
-    { name: "ImageNet (ILSVRC)", badge: "Primary", desc: "1.2 million labelled images across 1,000 categories — the CV benchmark standard.", reason: "Pre-training and transfer learning baseline — essential if the paper evaluates general-purpose vision model performance.", link: "https://www.image-net.org/", rows: "~1.2M images", free: true },
-    { name: "COCO (Common Objects in Context)", badge: "Alternative", desc: "330K images with instance segmentation, keypoints, and dense captions.", reason: "Multi-task benchmark relevant if the paper evaluates detection and segmentation jointly.", link: "https://cocodataset.org/", rows: "~330K images", free: true },
-    { name: "Open Images v7 (Google)", badge: "Alternative", desc: "9 million images with hierarchical labels, bounding boxes, and relationships.", reason: "Largest publicly available detection dataset — supports long-tail class evaluation discussed in computer vision literature.", link: "https://storage.googleapis.com/openimages/web/index.html", rows: "~9M images", free: true },
+    { name: "MVTec Anomaly Detection Dataset", badge: "Primary", desc: "Industrial inspection images with 15 object and texture categories and annotated defects.", reason: "Purpose-built for visual quality control AI — the standard benchmark for industrial computer vision business applications.", link: "https://www.mvtec.com/company/research/datasets/mvtec-ad", rows: "~5K images", free: true },
+    { name: "COCO (Common Objects in Context)", badge: "Alternative", desc: "330K images with instance segmentation, keypoints, and dense captions.", reason: "Multi-task detection benchmark for business applications — retail shelf analytics, security, and logistics vision AI.", link: "https://cocodataset.org/", rows: "~330K images", free: true },
+    { name: "Open Images v7 (Google)", badge: "Alternative", desc: "9 million images with hierarchical labels and bounding boxes across 600 categories.", reason: "Scale enables long-tail product and brand detection research relevant to retail and e-commerce AI.", link: "https://storage.googleapis.com/openimages/web/index.html", rows: "~9M images", free: true },
   ],
   general: [
-    { name: "UCI Machine Learning Repository", badge: "Primary", desc: "500+ curated datasets spanning classification, regression, and clustering tasks.", reason: "Gold-standard repository for reproducible ML research — widely cited and peer-reviewed datasets for benchmarking.", link: "https://archive.ics.uci.edu/", rows: "Varies", free: true },
-    { name: "Kaggle Datasets", badge: "Alternative", desc: "Public datasets contributed by the data science community across all domains.", reason: "Broad domain coverage enables finding a dataset closely matching the paper's specific research context.", link: "https://www.kaggle.com/datasets", rows: "Varies", free: true },
-    { name: "data.gov (US Open Data)", badge: "Alternative", desc: "US government open datasets across health, economy, education, and environment.", reason: "High-quality, authoritative data with clear provenance — useful for research requiring policy-level datasets.", link: "https://data.gov/", rows: "Thousands of datasets", free: true },
+    { name: "UCI Machine Learning Repository", badge: "Primary", desc: "500+ curated datasets spanning all major business analytics domains.", reason: "Gold-standard benchmarks for any AI-for-business research — reproducible and widely cited.", link: "https://archive.ics.uci.edu/", rows: "Varies", free: true },
+    { name: "Kaggle Datasets", badge: "Alternative", desc: "Community datasets across HR, marketing, finance, operations, and more.", reason: "Real-world business data with community benchmarks — validates models against practitioner baselines.", link: "https://www.kaggle.com/datasets", rows: "Varies", free: true },
+    { name: "OECD AI Policy Observatory", badge: "Alternative", desc: "Global AI adoption, regulation, and investment data across 50+ countries.", reason: "Macro-level AI-in-business context data — essential for strategy, governance, or policy-focused MBA theses.", link: "https://oecd.ai/en/data", rows: "Multi-year, 50+ countries", free: true },
   ]
 };
 
@@ -506,24 +754,28 @@ function a2(text, info) {
   const d = info.d;
   const datasets = DATASETS_DB[d] || DATASETS_DB.general;
   const features = {
-    healthcare: ["Age, gender, ethnicity (demographics)","Vital signs (heart rate, BP, SpO2, temperature)","Lab trajectory (creatinine, lactate, WBC)","Comorbidity index (Charlson score)","Medication class and dosage timing","Prior admission history"],
-    finance: ["Transaction amount and frequency","Merchant category and geography","Account age and credit history","Device fingerprint and session metadata","Income-to-debt ratio","Days since last delinquency"],
-    education: ["Weekly clickstream activity","Assessment scores and submission timing","Module completion rate","Forum participation count","Prior academic performance","Socioeconomic indicator"],
-    supply_chain: ["Lead time and distance band","Seller rating and fulfillment history","SKU demand history","Weather and event proxies","Delivery SLA deviation","Inventory turnover ratio"],
-    sustainability: ["Hourly load consumption","Temperature and humidity","Tariff structure and time-of-use periods","Building type and occupancy proxy","Renewable share in grid mix","Carbon intensity signal"],
-    nlp: ["Token-level embeddings (BERT/RoBERTa)","Sentence length and syntactic complexity","Named entity density","Sentiment polarity score","Domain-specific vocabulary frequency","Cross-lingual alignment score"],
-    computer_vision: ["Spatial resolution and aspect ratio","Color histogram and texture features","Object bounding box size distribution","Class frequency (long-tail indicator)","Augmentation sensitivity score","Transfer learning feature activations"],
-    general: ["Demographics and segment labels","Income band or socioeconomic tier","Service usage frequency","Geographic location band","Time trend indicators","Cross-feature interaction terms"]
+    finance: ["Transaction amount, frequency, and recency","Merchant category and geographic location","Account age and credit history depth","Income-to-debt ratio and employment status","Behavioural velocity (logins, address changes)","Days since last delinquency event"],
+    customer_analytics: ["Purchase recency, frequency, monetary value (RFM)","Product category affinity and browse-to-buy ratio","Session duration and click depth","Net Promoter Score and support ticket history","Channel attribution (email, paid, organic)","Subscription tier and contract length"],
+    operations: ["Lead time and distance band","SKU demand history and seasonality index","Seller reliability score and fulfilment rate","Delivery SLA deviation","Weather and event proxies","Inventory turnover ratio"],
+    predictive_analytics: ["Target variable engineering from business KPIs","Time-based train/validation split features","Lag features and rolling statistical moments","External macroeconomic indicators","Business unit and segment identifiers","Model confidence score as a feature for stacking"],
+    ai_strategy: ["AI maturity score (survey-derived)","Technology investment as % of revenue","Number of AI use cases in production","Employee AI literacy index","Board-level AI governance indicator","Regulatory environment index"],
+    nlp_business: ["TF-IDF and n-gram business vocabulary features","Domain-adaptive BERT sentence embeddings","Named entity density (companies, figures)","Sentiment polarity and subjectivity score","Document recency and source credibility","Cross-document semantic similarity"],
+    sustainability: ["Hourly energy consumption and peak load","Carbon intensity by energy source","Temperature, humidity, occupancy proxy","Building type and floor area","Tariff structure and time-of-use periods","Scope 1/2/3 emissions category"],
+    healthcare: ["Patient demographics and comorbidity index","Vital sign trends and lab trajectory","Prior admission count and length of stay","Medication class and dosage","Procedure codes (ICD-10/CPT)","Insurance type and cost per episode"],
+    computer_vision: ["Spatial resolution and aspect ratio","Colour histogram and texture entropy","Object bounding box distribution","Defect type and severity label","Production line ID and shift time","Augmentation sensitivity score"],
+    general: ["Business KPI as target variable","Segment and cohort identifiers","Time-based train/validation split","External macroeconomic indicators","Model output confidence score","Cross-feature interaction terms"]
   };
   const fe = {
-    healthcare: ["Temporal rolling windows (6h, 24h, 48h)","Missingness flags as clinical signal","Concept embeddings via ClinicalBERT","SOFA score delta over time"],
-    finance: ["RFM (Recency, Frequency, Monetary) aggregates","Time since last risky event","Entity-level graph features","Weight of Evidence (WOE) encoding"],
-    education: ["Weekly engagement delta","Sequence embeddings for clickstream","Outlier flags for abnormal submission patterns","Interaction terms (assessment × engagement)"],
-    supply_chain: ["Geo-cluster assignment","Congestion indicators from routing data","Seasonal decomposition (STL)","SLA deviation running average"],
-    sustainability: ["Lag features (t-1 to t-48)","Fourier seasonal terms","Peak/off-peak binary encoding","Carbon intensity join from grid operator"],
-    nlp: ["Sentence-level pooling strategies","Subword tokenization alignment","Contrastive pair generation","Prompt template engineering"],
-    computer_vision: ["Random crop and flip augmentation","Mixup and CutMix regularization","Multi-scale feature pyramid","Test-time augmentation ensemble"],
-    general: ["Per-capita normalization","Segment bucket encoding","Drift detection flags","Cross-feature polynomial terms"]
+    finance: ["RFM aggregates (Recency, Frequency, Monetary)","Time since last high-risk event","Entity-level graph features from transaction network","Weight of Evidence (WOE) encoding for categorical variables"],
+    customer_analytics: ["Customer lifetime value (CLV) projection","Cohort-based behavioural deltas","NLP embeddings from review text","Propensity score matching for causal CLV estimation"],
+    operations: ["Seasonal decomposition (STL) of demand series","Geo-cluster and congestion indicators","SLA deviation running average","Exogenous variable joins (weather, promotions)"],
+    predictive_analytics: ["Business-metric-aligned target encoding","Temporal cross-validation windows","Monotonicity constraints for business logic compliance","Calibration layer for probabilistic business decisions"],
+    ai_strategy: ["Composite AI maturity index (PCA)","Regulation stringency score by country/sector","AI ROI proxy from revenue per AI use case","Organisational readiness composite (survey PCA)"],
+    nlp_business: ["Domain-adaptive pre-training on business corpora","Sentence-level pooling with mean/max strategies","Contrastive learning for business entity disambiguation","Retrieval-Augmented Generation for document Q&A"],
+    sustainability: ["Lag features (t-1 to t-48 hours)","Fourier seasonal terms for weekly/annual cycles","Carbon intensity join from national grid operator","Peak/off-peak binary encoding"],
+    healthcare: ["Temporal rolling windows (6h, 24h, 48h)","Missingness flags as clinical signal","SOFA score delta over admission","ClinicalBERT embeddings for clinical notes"],
+    computer_vision: ["Random crop, flip, and colour jitter augmentation","Mixup and CutMix regularisation","Multi-scale feature pyramid for size-invariant detection","Test-time augmentation for calibration improvement"],
+    general: ["Per-segment normalisation","Drift detection flags for production monitoring","Cross-feature polynomial terms","Business-rules-based post-processing layer"]
   };
   return {
     domain: d,
@@ -537,56 +789,68 @@ function a2(text, info) {
 function a3(text, info, a2o) {
   const d = info.d;
   const useCasesDB = {
-    healthcare: [
-      { name: "Hospital triage prioritization", reason: `The paper's focus on ${d} prediction maps directly to risk stratification at admission — high-priority clinical need with documented ROI in reducing mortality and bed occupancy.` },
-      { name: "Readmission risk monitoring", reason: "Post-discharge readmission is the costliest outcome in hospital operations. The paper's temporal features and outcome labels align precisely with early warning system design." },
-      { name: "Clinical operations optimization", reason: "Predictive models reduce unnecessary interventions and staff burden — translating research findings into operational efficiency is a natural deployment pathway for the paper's methodology." },
-      { name: "Regulatory AI compliance (FDA/CE-MDR)", reason: "The EU and US are mandating explainability for clinical AI. The paper's results create a foundation for compliance-ready model documentation." },
-    ],
     finance: [
-      { name: "Fraud detection pipelines", reason: "Real-time transaction scoring is a mature deployment target. The paper's feature engineering approach directly supports the latency and precision requirements of production fraud systems." },
-      { name: "Credit underwriting automation", reason: "Automated underwriting reduces decision time from days to seconds. The paper's model architecture suits the approval/rejection binary framing common in lending." },
-      { name: "AML alert prioritization", reason: "Anti-Money Laundering systems generate thousands of false alerts daily. The paper's ranking and scoring approach reduces analyst burden by prioritizing genuine risk signals." },
-      { name: "Regulatory stress testing", reason: "Basel III/IV requires probabilistic default modeling under adverse scenarios. The paper's methodology can be extended to stress-test credit portfolios." },
+      { name: "AI-driven credit underwriting", reason: "Automated credit scoring reduces decision time from days to seconds and improves risk-adjusted loan book quality — a core operational AI application in banking." },
+      { name: "Real-time fraud detection pipeline", reason: "Real-time transaction scoring prevents revenue loss from fraud. The paper's feature engineering approach maps directly to production risk scoring architectures." },
+      { name: "Regulatory stress testing automation (Basel III/IV)", reason: "Regulators require probabilistic default modelling under adverse scenarios — the paper's methodology directly supports AI-augmented stress testing workflows." },
+      { name: "Explainable credit decisions (GDPR/Fair Lending)", reason: "EU AI Act and GDPR Article 22 mandate explanations for automated credit decisions — aligns the paper's XAI approach with a concrete compliance business need." },
     ],
-    education: [
-      { name: "Student dropout prevention systems", reason: "Early identification of at-risk students allows timely counsellor intervention — the paper's temporal engagement features are exactly what intervention triggers require." },
-      { name: "Adaptive learning pathways", reason: "Personalized content sequencing based on predicted performance drives engagement. The paper's student-level predictions enable real-time curriculum adaptation." },
-      { name: "Institutional planning dashboards", reason: "University leadership uses cohort-level outcome predictions for resource allocation and accreditation reporting — a direct application of aggregated model outputs." },
-      { name: "EdTech product analytics", reason: "Learning platform companies require actionable retention signals. The paper's features (clickstream, submission lag) align with product engagement metrics." },
+    customer_analytics: [
+      { name: "Personalised recommendation engine", reason: "Product recommendations drive 35%+ of Amazon revenue — the paper's customer behaviour modelling directly supports personalisation AI at scale." },
+      { name: "Churn prediction & retention campaign targeting", reason: "Reducing churn by 5% can increase profitability by 25–95% (Bain & Co.) — the paper's predictive model translates directly into targeted retention spend." },
+      { name: "Customer lifetime value optimisation", reason: "CLV-based resource allocation replaces spray-and-pray marketing — the paper's segmentation and prediction approach enables ROI-maximising CRM strategy." },
+      { name: "Omnichannel attribution modelling", reason: "Marketers need to know which touchpoints drive conversion — the paper's ML approach provides more accurate attribution than last-click or first-touch rules." },
     ],
-    supply_chain: [
-      { name: "Demand forecasting & inventory optimization", reason: "Overstock and stockout cost retailers billions annually. The paper's time-series features and domain data directly address the demand signal quality gap." },
-      { name: "Last-mile route optimization", reason: "Delivery cost and time are directly linked to demand predictability. The paper's models can inform dynamic routing and warehouse slotting decisions." },
-      { name: "Supplier risk monitoring", reason: "Supply disruptions (pandemics, geopolitics) require early warning systems. The paper's anomaly detection approach extends naturally to supplier reliability scoring." },
-      { name: "Retail replenishment automation", reason: "Automated purchase order generation requires high-confidence demand forecasts — the paper's uncertainty quantification is directly applicable." },
+    operations: [
+      { name: "Demand forecasting & automated replenishment", reason: "AI-driven replenishment reduces stockouts by 30% and overstock costs by 25% — the paper's forecasting model provides the signal quality required for automation." },
+      { name: "Supplier risk early warning system", reason: "Geopolitical disruptions require AI monitoring of supplier reliability signals — the paper's anomaly detection approach applies directly to multi-tier supplier risk." },
+      { name: "Last-mile delivery optimisation", reason: "Last-mile accounts for 53% of total delivery cost — the paper's predictive models inform dynamic routing and carrier selection decisions." },
+      { name: "Prescriptive inventory management (S&OP)", reason: "Sales & Operations Planning requires accurate probabilistic forecasts — the paper's uncertainty quantification enables risk-aware safety stock decisions." },
+    ],
+    predictive_analytics: [
+      { name: "Executive decision support dashboards", reason: "C-suite decisions on pricing, capacity, and market entry require predictive signals — the paper's model outputs integrate directly into strategic planning BI tools." },
+      { name: "Predictive employee attrition (People Analytics)", reason: "Replacing an employee costs 50–200% of their salary — AI-driven attrition prediction enables proactive retention investment for HR teams." },
+      { name: "Pricing optimisation & demand elasticity modelling", reason: "Dynamic pricing AI requires accurate demand forecasts — the paper's predictive approach supports revenue management across retail, travel, and SaaS." },
+      { name: "Operational anomaly detection", reason: "AI-flagged operational anomalies reduce incident response time — the paper's model architecture suits real-time business process monitoring." },
+    ],
+    ai_strategy: [
+      { name: "AI governance framework implementation", reason: "Boards and regulators require documented AI governance — the paper's framework analysis directly informs corporate AI policy design and compliance reporting." },
+      { name: "AI ROI measurement and investment prioritisation", reason: "CFOs need evidence-based AI investment criteria — the paper's maturity and performance metrics provide the business case vocabulary for AI budget allocation." },
+      { name: "Change management for AI transformation", reason: "70% of AI transformations fail due to cultural resistance — the paper's adoption barriers analysis supports HR and strategy consulting engagements." },
+      { name: "Responsible AI certification (ISO 42001)", reason: "ISO 42001 AI management system certification is becoming a procurement requirement — the paper's governance recommendations align with emerging international standards." },
+    ],
+    nlp_business: [
+      { name: "Enterprise document intelligence & contract analysis", reason: "Legal AI extracts obligations, risks, and dates from contracts at 90%+ human accuracy — the paper's NLP pipeline maps directly to this high-value automation use case." },
+      { name: "Customer service automation (intent classification)", reason: "NLP-powered chatbots deflect 40–80% of tier-1 support queries — the paper's text classification architecture supports contact centre AI deployment." },
+      { name: "Financial news sentiment trading signals", reason: "NLP-derived sentiment from earnings calls and news predicts short-term stock movements — the paper's language model approach supports quantitative trading strategies." },
+      { name: "Regulatory document monitoring & compliance", reason: "Firms must track regulatory changes across hundreds of documents — AI-driven regulatory intelligence reduces compliance team burden significantly." },
     ],
     sustainability: [
-      { name: "Energy demand response programs", reason: "Utilities require 15-minute ahead load forecasts to dispatch renewable capacity. The paper's temporal resolution aligns precisely with grid operational requirements." },
-      { name: "Carbon reporting and ESG disclosure", reason: "Scope 2 emissions reporting requires consumption-based carbon attribution. The paper's consumption models provide the granular data trail regulators demand." },
-      { name: "Smart grid balancing", reason: "Grid operators balance supply-demand in real time. The paper's forecasting accuracy at sub-hourly resolution is directly actionable for automated dispatch systems." },
-      { name: "Green building certification", reason: "LEED and BREEAM certification requires energy benchmarking. The paper's building-level models enable accurate baseline establishment." },
+      { name: "Scope 2 carbon reporting automation (ESG AI)", reason: "GHG Protocol Scope 2 accounting requires consumption-based attribution — the paper's energy models provide the audit-grade accuracy ESG disclosure demands." },
+      { name: "Energy cost optimisation for facility management", reason: "Energy represents 20–40% of operational cost in manufacturing — AI-driven load forecasting reduces demand charges and optimises tariff selection." },
+      { name: "Green procurement & supplier ESG scoring", reason: "Scope 3 emissions require supplier-level carbon data — the paper's predictive approach supports AI-driven supplier sustainability scoring." },
+      { name: "Net zero strategy planning & scenario modelling", reason: "Companies setting SBTi targets need credible trajectory modelling — the paper's forecasting methodology supports long-range emission scenario analysis." },
     ],
-    nlp: [
-      { name: "Enterprise document intelligence", reason: "Contracts, reports, and compliance documents require structured extraction. The paper's NLP pipeline translates directly to enterprise document automation workflows." },
-      { name: "Customer service automation", reason: "Intent classification and sentiment routing power virtual agents. The paper's classification architecture suits low-latency inference in contact centers." },
-      { name: "Healthcare clinical note processing", reason: "EHR free-text contains critical clinical signals invisible to structured data. The paper's NLP approach unlocks this information for downstream clinical models." },
-      { name: "Content moderation at scale", reason: "Platform safety teams process millions of posts daily. The paper's text classification efficiency and robustness are directly applicable to real-time moderation pipelines." },
+    healthcare: [
+      { name: "Hospital operational efficiency (bed management)", reason: "AI-predicted patient flow reduces bed occupancy costs and emergency department wait times — a direct operational business case for the paper's models." },
+      { name: "Population health management (payer/insurer AI)", reason: "Health insurers use AI to identify high-risk populations for proactive care programmes — the paper's predictive model supports risk-adjusted premium and care pathway design." },
+      { name: "Clinical trial patient stratification", reason: "AI-driven patient segmentation accelerates clinical trial recruitment — a multi-billion dollar operational efficiency opportunity for biopharma." },
+      { name: "AI-driven diagnostics billing optimisation", reason: "Proper AI-assisted coding of clinical procedures reduces billing errors and revenue leakage — a direct financial impact use case for the paper's classification approach." },
     ],
     computer_vision: [
-      { name: "Quality control in manufacturing", reason: "Visual defect detection replaces human inspectors on production lines. The paper's detection accuracy and inference speed are key metrics for industrial deployment." },
-      { name: "Medical imaging diagnostics", reason: "Radiology AI assists physicians in screening — the paper's segmentation or detection approach maps to pathology identification in X-ray, CT, and MRI workflows." },
-      { name: "Autonomous vehicle perception", reason: "Real-time object detection is safety-critical in AV stacks. The paper's latency-accuracy trade-offs are directly relevant to embedded deployment constraints." },
-      { name: "Retail shelf analytics", reason: "Planogram compliance and stock-out detection via cameras reduce retail shrinkage — the paper's detection methodology applies to store monitoring systems." },
+      { name: "Automated visual quality control (manufacturing)", reason: "Visual AI reduces defect escape rates to near-zero while cutting inspection labour costs by 60–80% — directly aligned with the paper's detection methodology." },
+      { name: "Retail shelf analytics & planogram compliance", reason: "Out-of-stock items cost retailers $1T globally per year — real-time shelf monitoring AI prevents stockouts and enforces planogram compliance." },
+      { name: "Document processing & KYC automation (banking)", reason: "AI-driven identity document verification reduces KYC onboarding time from days to minutes — a high-ROI business process automation use case." },
+      { name: "Construction site safety monitoring", reason: "Computer vision for PPE compliance reduces workplace accidents and insurance costs — a growing AI-for-business application in infrastructure sectors." },
     ],
     general: [
-      { name: "Business intelligence automation", reason: "BI tools increasingly embed predictive models for anomaly detection and forecasting. The paper's approach is domain-agnostic enough to integrate with enterprise analytics platforms." },
-      { name: "Operational risk dashboards", reason: "Risk teams need real-time scoring across multiple dimensions. The paper's multi-output models suit multi-risk aggregation dashboards." },
-      { name: "Predictive maintenance", reason: "Asset failure prediction reduces unplanned downtime. The paper's temporal sequence modeling applies to sensor data from industrial equipment." },
+      { name: "Enterprise business intelligence automation", reason: "BI platforms embed predictive models for anomaly detection and forecasting — the paper's approach integrates with standard enterprise analytics infrastructure." },
+      { name: "Operational risk scoring dashboard", reason: "Risk teams need real-time multi-dimensional scoring — the paper's model outputs suit structured risk aggregation and reporting workflows." },
+      { name: "AI-powered strategic planning support", reason: "Scenario modelling and market forecasting support C-suite planning — the paper's predictive methodology provides the quantitative foundation for evidence-based strategy." },
     ]
   };
 
-  const base = {healthcare:91,finance:94,education:84,supply_chain:89,sustainability:87,nlp:88,computer_vision:86,general:78}[d] || 78;
+  const base = {healthcare:88,finance:94,operations:89,sustainability:85,nlp_business:88,predictive_analytics:87,customer_analytics:90,ai_strategy:86,computer_vision:84,general:80}[d] || 80;
   const useCases = (useCasesDB[d] || useCasesDB.general).slice(0, 4);
   return { domain: d, industry_use_cases: useCases, demand_score: Math.min(100, base + 2) };
 }
@@ -595,100 +859,124 @@ function a3(text, info, a2o) {
 function a4(text, info) {
   const d = info.d;
   const techDB = {
-    healthcare: {
-      technique: "Temporal Gradient Boosting (XGBoost/LightGBM) + SHAP Explainability",
-      difficulty: "★★★☆☆  Moderate",
-      explanation: "Gradient boosting excels on structured clinical data with missing values and mixed feature types — both common in EHR datasets.",
-      justification: [
-        "Clinical data is primarily tabular with temporal structure — tree-based models consistently outperform deep learning on structured medical data (Shwartz-Ziv & Armon, 2022).",
-        "SHAP enables patient-level explanation required by clinical stakeholders and regulatory bodies (FDA AI/ML guidance, 2021).",
-        "XGBoost handles missing values natively — critical for EHR data where up to 40% of lab values may be absent.",
-        "Faster iteration cycles allow rapid hypothesis testing aligned with the paper's experimental design.",
-        "Well-established baselines in clinical literature enable direct benchmark comparison."
-      ]
-    },
     finance: {
-      technique: "Graph Neural Network (GNN) + XGBoost Hybrid",
-      difficulty: "★★★★☆  Advanced",
-      explanation: "GNNs capture relational fraud signals across transaction networks while XGBoost handles high-dimensional tabular features.",
-      justification: [
-        "Financial fraud is inherently relational — individual transaction features miss the network-level patterns GNNs detect (Liu et al., 2021).",
-        "XGBoost provides the tabular baseline ensuring competitive performance when graph structure is sparse or noisy.",
-        "Hybrid ensembling reduces single-model failure risk, critical for high-stakes credit and fraud decisions.",
-        "GNNs are increasingly deployed in production at major fintech firms (PayPal, Stripe), validating industrial feasibility.",
-        "The combined approach addresses both individual and group-level fraud patterns identified in the paper's dataset."
-      ]
-    },
-    education: {
-      technique: "LSTM / Transformer-lite Sequence Model + Attention Visualization",
+      technique: "XGBoost / LightGBM + SHAP + Calibration Layer",
       difficulty: "★★★☆☆  Moderate",
-      explanation: "Sequential student behavior (clickstream, submission patterns) is best modeled by architectures that capture temporal dependencies.",
+      explanation: "Gradient boosting excels on structured financial tabular data and delivers the interpretability regulators require under Basel III/IV and GDPR Article 22.",
       justification: [
-        "Student learning trajectories are inherently sequential — LSTMs capture the 'forgetting curve' dynamic that static models miss.",
-        "Attention mechanisms identify which specific engagement events most predict dropout — directly actionable for counsellors.",
-        "Transformer-lite (DistilBERT-style) reduces compute requirements while retaining sequence modeling capacity for MOOC-scale data.",
-        "Sequence models outperform gradient boosting on time-ordered clickstream data when session length varies (Hlosta et al., 2017).",
-        "Visualizable attention weights translate model decisions into interpretable intervention triggers for educators."
+        "Financial data is primarily tabular — tree-based models consistently outperform deep learning on structured credit and transaction data (Shwartz-Ziv & Armon, 2022).",
+        "SHAP explanations satisfy GDPR Article 22 'right to explanation' requirements — a legal necessity for consumer credit decisions in the EU.",
+        "Calibration via Platt scaling converts raw scores to well-calibrated probabilities required for regulatory capital calculations.",
+        "XGBoost handles class imbalance natively via scale_pos_weight — critical for fraud detection where positive rates are <1%.",
+        "Extensive benchmark results on Kaggle credit competitions enable direct comparison with published baselines."
       ]
     },
-    supply_chain: {
-      technique: "Probabilistic Forecasting (DeepAR / N-BEATS) + Linear Programming Optimization",
-      difficulty: "★★★★☆  Advanced",
-      explanation: "Supply chain decisions require uncertainty quantification, not just point forecasts — probabilistic models enable risk-aware inventory optimization.",
+    customer_analytics: {
+      technique: "Gradient Boosting (XGBoost) for CLV Regression + K-Means / DBSCAN Segmentation",
+      difficulty: "★★★☆☆  Moderate",
+      explanation: "Combining predictive CLV modelling with unsupervised segmentation enables both accurate individual-level prediction and actionable customer groupings for marketing strategy.",
       justification: [
-        "Point forecasts cause systematic over/under-stocking — probabilistic outputs (10th/90th percentile) enable safety-stock calculation aligned with service-level targets.",
-        "DeepAR handles multiple co-varying time series simultaneously, capturing cross-SKU demand dependencies the paper's dataset exhibits.",
-        "Linear Programming optimization converts probabilistic forecasts into actionable replenishment decisions, closing the research-to-deployment gap.",
-        "N-BEATS is the current benchmark on M4/M5 competitions — directly comparable to the paper's domain benchmark.",
-        "Uncertainty-aware systems are increasingly required by retailers for supply chain resilience post-COVID disruptions."
+        "CLV prediction via gradient boosting outperforms BG/NBD models on complex multi-channel customer data (Chamberlain et al., 2017).",
+        "K-Means provides interpretable segments that marketing teams can act on — DBSCAN captures irregular high-value clusters without forcing cluster count.",
+        "The combined approach bridges the gap between academic prediction accuracy and business-actionable customer strategy.",
+        "RFM features as input to both models ensures consistency between segmentation and prediction outputs.",
+        "Minimal infrastructure requirements make this feasible for SMEs — extending research impact beyond enterprise-only applications."
+      ]
+    },
+    operations: {
+      technique: "Probabilistic Forecasting (N-BEATS / LightGBM) + Inventory Optimisation Layer",
+      difficulty: "★★★★☆  Advanced",
+      explanation: "Business operations require uncertainty quantification, not just point forecasts — probabilistic outputs enable risk-aware inventory and procurement decisions.",
+      justification: [
+        "Point forecasts cause systematic over/under-stocking — probabilistic outputs (P10/P50/P90) enable service-level-aligned safety stock calculation.",
+        "N-BEATS is the benchmark winner on M4/M5 competitions — directly comparable to published operations AI baselines.",
+        "LightGBM with exogenous variables (promotions, weather) captures business drivers that pure time-series models miss.",
+        "The optimisation layer closes the research-to-decision gap by converting forecast distributions into actionable replenishment orders.",
+        "Uncertainty quantification aligns with supply chain resilience requirements post-COVID — a documented industry need."
+      ]
+    },
+    predictive_analytics: {
+      technique: "AutoML Pipeline (H2O / AutoGluon) + Business-Metric Calibration",
+      difficulty: "★★☆☆☆  Accessible",
+      explanation: "AutoML enables rapid benchmarking of multiple model families, ensuring the best predictor is identified systematically — critical for business-facing research with tight timelines.",
+      justification: [
+        "AutoML eliminates model selection bias — every family (linear, tree, neural) is evaluated on the same business-relevant holdout metric.",
+        "Business-metric calibration (profit curves, cost-sensitive learning) aligns model optimisation with actual decision economics rather than AUC.",
+        "H2O and AutoGluon produce model ensembles that consistently outperform single models on tabular business data.",
+        "AutoML documentation and leaderboard outputs are interpretable by business stakeholders — improving thesis communication impact.",
+        "Accessible infrastructure requirement enables deployment within a corporate data platform without specialised MLOps engineering."
+      ]
+    },
+    ai_strategy: {
+      technique: "Mixed-Methods: Survey Analytics + NLP (Topic Modelling) + Structural Equation Modelling",
+      difficulty: "★★★☆☆  Moderate",
+      explanation: "AI strategy research requires both quantitative (SEM for causal paths) and qualitative (NLP on open-text responses) methods to capture adoption drivers and barriers.",
+      justification: [
+        "SEM validates causal relationships between AI maturity, organisational capabilities, and business outcomes — the core research question in AI strategy.",
+        "Topic modelling (LDA/BERTopic) extracts themes from open-ended survey responses — providing qualitative depth that closed-scale surveys miss.",
+        "Mixed methods are standard in top IS and management journals (MIS Quarterly, Strategic Management Journal) — ensuring publication readiness.",
+        "Survey instruments validated against existing AI maturity frameworks (MIT CISR, McKinsey AI Index) enable benchmark comparisons.",
+        "The combined approach satisfies both technical and managerial thesis committee requirements in an MBA programme."
+      ]
+    },
+    nlp_business: {
+      technique: "Fine-tuned Transformer (FinBERT / RoBERTa) + RAG Pipeline for Business Q&A",
+      difficulty: "★★★★☆  Advanced",
+      explanation: "Domain-adapted transformers capture business-specific language, while Retrieval-Augmented Generation enables grounded Q&A over proprietary business documents.",
+      justification: [
+        "FinBERT outperforms general BERT by 15%+ on financial sentiment tasks — domain adaptation is necessary for business NLP applications.",
+        "RAG architecture prevents hallucination in business document Q&A — critical for legal, compliance, and financial analysis use cases.",
+        "LoRA fine-tuning reduces compute requirements by >10x while retaining 95%+ of full fine-tuning performance (Hu et al., 2022).",
+        "The pipeline architecture maps directly to enterprise document intelligence products — maximising thesis-to-deployment relevance.",
+        "Evaluation on Financial PhraseBank and SEC filings benchmarks enables direct comparison with published business NLP literature."
       ]
     },
     sustainability: {
-      technique: "Hybrid: XGBoost (short-term) + SARIMAX (seasonal) + LSTM (long-term)",
+      technique: "Hybrid: LightGBM (short-term) + SARIMAX (seasonal) + LSTM (long-term) Ensemble",
       difficulty: "★★★☆☆  Moderate",
-      explanation: "Energy data exhibits multiple overlapping temporal patterns — a hybrid approach captures daily cycles, seasonal trends, and irregular spikes.",
+      explanation: "Energy and ESG data exhibit multiple overlapping temporal patterns — a hybrid ensemble captures daily cycles, seasonal trends, and macro-level regime shifts.",
       justification: [
-        "Short-term (1–6h) forecasting benefits from XGBoost's ability to incorporate weather features and tariff signals with low latency.",
-        "SARIMAX handles weekly/seasonal periodicity analytically, avoiding the data hunger of pure deep learning for long seasonal cycles.",
-        "LSTM captures the non-linear long-term dependencies between consumption and macroeconomic factors identified in the paper.",
-        "Hybrid ensembling consistently outperforms single models on energy benchmarks (GEFCom2014, UCI Energy datasets).",
-        "The modular architecture allows separate re-training of components as new data arrives, critical for live grid deployment."
+        "Short-term (1–6h) forecasting benefits from LightGBM's ability to incorporate weather, tariff, and occupancy signals with low latency.",
+        "SARIMAX handles weekly/seasonal periodicity analytically — avoiding the data hunger of pure deep learning for long seasonal patterns.",
+        "LSTM captures non-linear long-term dependencies between consumption and macroeconomic or policy factors.",
+        "Hybrid ensembling consistently outperforms single models on energy benchmarks (GEFCom2014) — supporting the competitive performance claim.",
+        "The modular architecture allows separate retraining of components — critical for live ESG reporting systems with streaming data."
       ]
     },
-    nlp: {
-      technique: "Fine-tuned Transformer (BERT/RoBERTa) + LoRA Efficient Adaptation",
-      difficulty: "★★★★☆  Advanced",
-      explanation: "Pre-trained language models achieve SOTA on most NLP tasks; LoRA enables parameter-efficient adaptation for domain-specific corpora.",
+    healthcare: {
+      technique: "Temporal Gradient Boosting (XGBoost) + SHAP + Fairness Auditing Layer",
+      difficulty: "★★★☆☆  Moderate",
+      explanation: "Gradient boosting excels on structured EHR data while SHAP and fairness auditing address the explainability and equity requirements of clinical AI deployment.",
       justification: [
-        "Transformers outperform all prior NLP architectures on classification, extraction, and generation tasks relevant to the paper's scope.",
-        "LoRA (Low-Rank Adaptation) reduces fine-tuning compute by >10x while preserving 95%+ of full fine-tuning performance (Hu et al., 2022).",
-        "RoBERTa provides stronger baseline than BERT due to improved pre-training — relevant if the paper evaluates on GLUE/SuperGLUE benchmarks.",
-        "Domain-specific vocabulary in finance/healthcare/legal NLP requires continued pre-training — the proposed pipeline accommodates this.",
-        "The LoRA approach makes deployment feasible on smaller GPU infrastructure, addressing the research-to-production gap."
+        "Clinical data is primarily tabular — tree-based models consistently outperform deep learning on structured medical data (Shwartz-Ziv & Armon, 2022).",
+        "SHAP enables patient-level explanation required by clinical stakeholders and regulatory bodies (FDA AI/ML Action Plan, 2021).",
+        "Fairness auditing (demographic parity, equalised odds) is required by the EU AI Act for high-risk healthcare AI systems.",
+        "XGBoost handles missing values natively — critical for EHR data where up to 40% of lab values may be absent.",
+        "Business case framing: reduced readmissions save hospitals $15,000–26,000 per avoided event — directly quantifiable ROI."
       ]
     },
     computer_vision: {
-      technique: "Vision Transformer (ViT) + Efficient Backbone (EfficientNetV2) Ensemble",
-      difficulty: "★★★★★  Expert",
-      explanation: "Combining attention-based global context (ViT) with efficient convolutional local features achieves SOTA on most vision benchmarks.",
+      technique: "EfficientNetV2 / YOLOv8 + Deployment Optimisation (TensorRT / ONNX)",
+      difficulty: "★★★★☆  Advanced",
+      explanation: "Efficient convolutional architectures with inference optimisation target the real-world deployment constraint that is most relevant in business vision applications.",
       justification: [
-        "ViT captures long-range spatial dependencies that CNNs miss — critical for tasks where global context determines class identity.",
-        "EfficientNetV2 provides 4× faster inference than ViT alone, enabling real-time deployment at the edge as required by industrial applications.",
-        "Ensemble diversity (global attention vs. local convolution) reduces error rate on hard cases, particularly relevant for rare-class detection.",
-        "Pre-training on ImageNet-21k gives strong initialization — the paper's fine-tuning approach benefits from this prior.",
-        "Test-time augmentation on the ensemble further improves calibration, addressing overconfidence in minority classes."
+        "YOLOv8 achieves near-SOTA detection accuracy at real-time inference speed — directly relevant to manufacturing and retail deployment constraints.",
+        "EfficientNetV2 provides 4× faster training with better accuracy than EfficientNetV1 — enabling more thorough hyperparameter search within thesis compute budget.",
+        "TensorRT/ONNX optimisation reduces inference latency by 3–5× — the critical metric for edge deployment in industrial settings.",
+        "Business framing: automated visual inspection reduces labour cost by 60–80% at quality escape rates below 0.1% — a quantifiable ROI for the thesis.",
+        "Pre-training on ImageNet-21k provides strong initialisation, reducing the labelled data requirement to 500–2,000 images per class."
       ]
     },
     general: {
-      technique: "Explainable Gradient Boosting (XGBoost) + SHAP + Calibration Layer",
+      technique: "XGBoost + SHAP + Business-Metric Calibration Layer",
       difficulty: "★★☆☆☆  Accessible",
-      explanation: "Gradient boosting provides the strongest out-of-the-box tabular baseline with built-in feature importance and fast iteration.",
+      explanation: "Gradient boosting provides the strongest out-of-the-box business tabular baseline with built-in feature importance and fast iteration cycles.",
       justification: [
-        "XGBoost wins the majority of Kaggle tabular competitions — establishes a strong, reproducible baseline for the paper's domain.",
-        "SHAP provides local and global explanations satisfying stakeholder interpretability requirements across most industries.",
-        "Probability calibration (Platt scaling / isotonic regression) converts raw scores to reliable probabilities for threshold-based decisions.",
-        "Low infrastructure requirements enable deployment without GPU clusters — broadening research impact beyond well-funded organizations.",
-        "Extensive hyperparameter documentation and tooling reduces time-to-experiment, allowing broader ablation studies."
+        "XGBoost wins the majority of Kaggle business analytics competitions — provides an immediately credible and reproducible baseline.",
+        "SHAP explanations satisfy stakeholder and regulatory interpretability requirements across all business domains.",
+        "Business-metric calibration (profit curves, cost-sensitive thresholds) aligns the model with actual decision economics.",
+        "Low infrastructure requirements enable deployment within standard corporate BI and data platform environments.",
+        "Extensive hyperparameter documentation reduces time-to-experiment — allowing broader ablation studies within thesis scope."
       ]
     }
   };
@@ -832,34 +1120,77 @@ function render() {
   if (!S.outputs) return;
   const { o1, o2, o3, o4, o5 } = S.outputs;
 
-  // AGENT 1
+  // AGENT 1 — 5-column LASC template format
   const info = o1.paper_info;
-  const paperHtml = `
+
+  // Paper summary card (uploaded paper metadata)
+  const uploadedCard = `
     <div class="result-section">
-      <div class="result-label">📄 Paper Summary</div>
+      <div class="result-label">📄 Uploaded Paper — Quick Profile</div>
       <div class="paper-summary">
         <div class="ps-title">${esc(info.titleCandidate)}</div>
         <div class="ps-row">
-          <div class="ps-cell"><strong>Domain</strong>${esc(info.d.replace("_"," "))}</div>
+          <div class="ps-cell"><strong>Detected Domain</strong>${esc(info.d.replace(/_/g," "))}</div>
           <div class="ps-cell"><strong>Est. Pages</strong>~${info.pageEstimate}</div>
           <div class="ps-cell"><strong>Word Count</strong>${info.wordCount.toLocaleString()}</div>
-          <div class="ps-cell"><strong>Key Concepts</strong>${esc(info.keywords.slice(0,4).join(", "))}</div>
+          <div class="ps-cell"><strong>Key Concepts</strong>${esc(info.keywords.slice(0,5).join(", "))}</div>
         </div>
         ${info.problems.length ? `<div class="ps-cell" style="margin-top:6px"><strong>Detected Challenges</strong>${esc(info.problems.slice(0,2).join("; "))}</div>` : ""}
         ${info.solutions.length ? `<div class="ps-cell" style="margin-top:6px"><strong>Proposed Contributions</strong>${esc(info.solutions.slice(0,2).join("; "))}</div>` : ""}
+        <div class="ps-cell" style="margin-top:6px;grid-column:1/-1"><strong>🎓 MBA AI for Business Context</strong>All related papers and recommendations below are framed through the lens of <em>AI applied to business strategy, operations, and decision-making</em> — aligned with a Master's in AI for Business.</div>
       </div>
+    </div>`;
+
+  // Related papers using the 5-column LASC template structure
+  const relatedHtml = o1.related_papers.map((p, i) => `
+    <div class="rp-item" style="border-left:3px solid #58a6ff">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="background:rgba(88,166,255,.15);color:#58a6ff;font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px">REF ${i+1}</span>
+        <span style="font-size:.68rem;color:var(--ink-subtle);background:var(--surface3);padding:2px 8px;border-radius:999px">${esc(p.topic_area)}</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:7px">
+
+        <div style="background:var(--surface3);border-radius:6px;padding:8px 10px">
+          <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#58a6ff;margin-bottom:3px">1 · Article / Paper</div>
+          <div class="rp-title">${esc(p.citation)}</div>
+          <div style="font-size:.73rem;color:var(--ink-subtle);margin-top:2px;font-style:italic">${esc(p.journal)}</div>
+        </div>
+
+        <div style="background:var(--surface3);border-radius:6px;padding:8px 10px">
+          <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#f78166;margin-bottom:3px">3 · Problems / Issues / Challenges</div>
+          <div style="font-size:.78rem;color:var(--ink-muted);line-height:1.5">${esc(p.problems)}</div>
+        </div>
+
+        <div style="background:var(--surface3);border-radius:6px;padding:8px 10px">
+          <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#2ea043;margin-bottom:3px">4 · Potential Solutions</div>
+          <div style="font-size:.78rem;color:var(--ink-muted);line-height:1.5">${esc(p.solutions)}</div>
+        </div>
+
+        <div style="background:var(--surface3);border-radius:6px;padding:8px 10px">
+          <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#e3b341;margin-bottom:3px">5 · Further Research</div>
+          <div style="font-size:.78rem;color:var(--ink-muted);line-height:1.5">${esc(p.further_research)}</div>
+        </div>
+
+        <div class="rp-reason">
+          <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#58a6ff;margin-bottom:3px">🔗 Connection to Your Paper</div>
+          <div style="font-size:.78rem;line-height:1.5">${esc(p.connection)}</div>
+        </div>
+
+      </div>
+    </div>`).join("");
+
+  const paperHtml = `
+    ${uploadedCard}
+    <div class="result-section">
+      <div class="result-label">📚 Related Papers — LASC Research Template</div>
+      <div style="font-size:.75rem;color:var(--ink-subtle);background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.15);border-radius:6px;padding:8px 10px;margin-bottom:10px">
+        Each entry follows the 5-column research template: <strong style="color:var(--ink-muted)">Article/Paper · Topic Area · Problems · Solutions · Further Research</strong> — plus connection to your uploaded PDF.
+      </div>
+      ${relatedHtml}
     </div>
     <div class="result-section">
-      <div class="result-label">📚 Related Papers & Why They're Relevant</div>
-      ${o1.related_papers.map(p => `
-        <div class="rp-item">
-          <div class="rp-title">${esc(p.title)}</div>
-          <div style="font-size:.73rem;color:var(--ink-subtle);margin-bottom:4px">${esc(p.journal)}</div>
-          <div class="rp-reason">🔗 <strong>Connection to your paper:</strong> ${esc(p.reason)}</div>
-        </div>`).join("")}
-    </div>
-    <div class="result-section">
-      <div class="result-label">🕳 Research Gaps Identified</div>
+      <div class="result-label">🕳 Research Gaps for Your MBA Thesis</div>
       <ul class="items">${o1.research_gaps.map(g => `<li>${esc(g)}</li>`).join("")}</ul>
     </div>`;
   $("a1").innerHTML = paperHtml;
